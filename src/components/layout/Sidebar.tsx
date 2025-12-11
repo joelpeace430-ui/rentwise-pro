@@ -1,4 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import {
   LayoutDashboard,
   Building2,
@@ -23,6 +25,22 @@ const navigation = [
 
 const Sidebar = () => {
   const location = useLocation();
+  const { signOut, user } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been successfully signed out.",
+    });
+  };
+
+  // Get user initials
+  const getInitials = () => {
+    if (!user?.email) return "U";
+    return user.email.charAt(0).toUpperCase();
+  };
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border">
@@ -56,11 +74,26 @@ const Sidebar = () => {
 
         {/* Bottom section */}
         <div className="border-t border-sidebar-border p-3 space-y-1">
+          {/* User info */}
+          <div className="flex items-center gap-3 px-4 py-3 mb-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-sm font-medium">
+              {getInitials()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-sidebar-foreground truncate">
+                {user?.email}
+              </p>
+            </div>
+          </div>
+          
           <Link to="/settings" className="nav-item">
             <Settings className="h-5 w-5" />
             <span>Settings</span>
           </Link>
-          <button className="nav-item w-full text-left">
+          <button
+            onClick={handleSignOut}
+            className="nav-item w-full text-left"
+          >
             <LogOut className="h-5 w-5" />
             <span>Sign Out</span>
           </button>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,57 +17,59 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Search, MoreHorizontal, Building2, MapPin } from "lucide-react";
-
-const properties = [
-  {
-    id: 1,
-    name: "Maple Street Apartments",
-    address: "123 Maple Street, New York, NY 10001",
-    units: 12,
-    occupiedUnits: 10,
-    monthlyRevenue: "$18,500",
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Oak Ridge Condos",
-    address: "456 Oak Ridge Blvd, Brooklyn, NY 11201",
-    units: 8,
-    occupiedUnits: 8,
-    monthlyRevenue: "$16,800",
-    status: "active",
-  },
-  {
-    id: 3,
-    name: "Sunset Villas",
-    address: "789 Sunset Ave, Queens, NY 11375",
-    units: 6,
-    occupiedUnits: 5,
-    monthlyRevenue: "$10,800",
-    status: "active",
-  },
-  {
-    id: 4,
-    name: "Downtown Lofts",
-    address: "321 Main Street, Manhattan, NY 10013",
-    units: 15,
-    occupiedUnits: 12,
-    monthlyRevenue: "$37,500",
-    status: "active",
-  },
-  {
-    id: 5,
-    name: "Riverfront Suites",
-    address: "654 River Road, Bronx, NY 10451",
-    units: 10,
-    occupiedUnits: 7,
-    monthlyRevenue: "$13,650",
-    status: "maintenance",
-  },
-];
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Plus, Search, MoreHorizontal, Building2, MapPin, Loader2 } from "lucide-react";
+import { useProperties, Property } from "@/hooks/useProperties";
+import PropertyDialog from "@/components/properties/PropertyDialog";
 
 const Properties = () => {
+  const { properties, loading, createProperty, updateProperty, deleteProperty } = useProperties();
+  const [search, setSearch] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
+
+  const filteredProperties = properties.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.address.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleEdit = (property: Property) => {
+    setEditingProperty(property);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = (property: Property) => {
+    setPropertyToDelete(property);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (propertyToDelete) {
+      await deleteProperty(propertyToDelete.id);
+      setDeleteDialogOpen(false);
+      setPropertyToDelete(null);
+    }
+  };
+
+  const handleSave = async (data: any) => {
+    if (editingProperty) {
+      return updateProperty(editingProperty.id, data);
+    }
+    return createProperty(data);
+  };
+
   return (
     <DashboardLayout
       title="Properties"
@@ -81,9 +84,17 @@ const Properties = () => {
               type="search"
               placeholder="Search properties..."
               className="pl-9"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Button className="gap-2">
+          <Button
+            className="gap-2"
+            onClick={() => {
+              setEditingProperty(null);
+              setDialogOpen(true);
+            }}
+          >
             <Plus className="h-4 w-4" />
             Add Property
           </Button>
@@ -92,90 +103,144 @@ const Properties = () => {
         {/* Properties Table */}
         <Card className="shadow-md">
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[300px]">Property</TableHead>
-                  <TableHead>Units</TableHead>
-                  <TableHead>Occupancy</TableHead>
-                  <TableHead>Monthly Revenue</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {properties.map((property) => (
-                  <TableRow key={property.id} className="table-row-hover">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                          <Building2 className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {property.name}
-                          </p>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <MapPin className="h-3 w-3" />
-                            {property.address}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredProperties.length === 0 ? (
+              <div className="text-center py-12">
+                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  {search ? "No properties found" : "No properties yet"}
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  {search
+                    ? "Try adjusting your search"
+                    : "Add your first property to get started"}
+                </p>
+                {!search && (
+                  <Button onClick={() => setDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Property
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-[300px]">Property</TableHead>
+                    <TableHead>Units</TableHead>
+                    <TableHead>Occupancy</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredProperties.map((property) => (
+                    <TableRow key={property.id} className="table-row-hover">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                            <Building2 className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {property.name}
+                            </p>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <MapPin className="h-3 w-3" />
+                              {property.address}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{property.units}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[100px]">
-                          <div
-                            className="h-full bg-success rounded-full"
-                            style={{
-                              width: `${(property.occupiedUnits / property.units) * 100}%`,
-                            }}
-                          />
+                      </TableCell>
+                      <TableCell>{property.total_units}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[100px]">
+                            <div
+                              className="h-full bg-success rounded-full"
+                              style={{
+                                width: `${((property.occupied_units || 0) / property.total_units) * 100}%`,
+                              }}
+                            />
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {property.occupied_units || 0}/{property.total_units}
+                          </span>
                         </div>
-                        <span className="text-sm text-muted-foreground">
-                          {property.occupiedUnits}/{property.units}
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={
+                            property.status === "active"
+                              ? "badge-success"
+                              : "badge-warning"
+                          }
+                        >
+                          {property.status === "active" ? "Active" : "Maintenance"}
                         </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {property.monthlyRevenue}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={
-                          property.status === "active"
-                            ? "badge-success"
-                            : "badge-warning"
-                        }
-                      >
-                        {property.status === "active" ? "Active" : "Maintenance"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Edit Property</DropdownMenuItem>
-                          <DropdownMenuItem>Manage Units</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(property)}>
+                              Edit Property
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => handleDelete(property)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      <PropertyDialog
+        open={dialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setEditingProperty(null);
+        }}
+        property={editingProperty}
+        onSave={handleSave}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Property</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{propertyToDelete?.name}"? This action
+              cannot be undone. All associated tenants must be removed first.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

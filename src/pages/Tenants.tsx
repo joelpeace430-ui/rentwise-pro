@@ -32,6 +32,7 @@ import { Plus, Search, MoreHorizontal, Mail, Users, Loader2 } from "lucide-react
 import { useTenants, Tenant } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
 import TenantDialog from "@/components/tenants/TenantDialog";
+import InviteTenantButton from "@/components/tenants/InviteTenantButton";
 import { format } from "date-fns";
 
 const Tenants = () => {
@@ -218,24 +219,31 @@ const Tenants = () => {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(tenant)}>
-                              Edit Tenant
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => handleDelete(tenant)}
-                            >
-                              Remove Tenant
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center gap-2">
+                          <InviteTenantButton
+                            tenantId={tenant.id}
+                            tenantEmail={tenant.email}
+                            tenantName={`${tenant.first_name} ${tenant.last_name}`}
+                          />
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(tenant)}>
+                                Edit Tenant
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDelete(tenant)}
+                              >
+                                Remove Tenant
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -196,6 +196,41 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_invitations: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          tenant_id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          tenant_id: string
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          tenant_id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_invitations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           created_at: string
@@ -209,6 +244,7 @@ export type Database = {
           phone: string | null
           property_id: string
           rent_status: string
+          tenant_user_id: string | null
           unit_number: string
           updated_at: string
           user_id: string
@@ -225,6 +261,7 @@ export type Database = {
           phone?: string | null
           property_id: string
           rent_status?: string
+          tenant_user_id?: string | null
           unit_number: string
           updated_at?: string
           user_id: string
@@ -241,6 +278,7 @@ export type Database = {
           phone?: string | null
           property_id?: string
           rent_status?: string
+          tenant_user_id?: string | null
           unit_number?: string
           updated_at?: string
           user_id?: string

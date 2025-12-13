@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useTenantAuth } from "@/contexts/TenantAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Building2, FileText, CreditCard, LogOut, Home, DollarSign, Calendar } from "lucide-react";
+import { Building2, FileText, CreditCard, LogOut, LayoutDashboard, MessageSquare, FolderOpen, DollarSign, Calendar } from "lucide-react";
 import { format } from "date-fns";
+import PortalDashboard from "@/components/tenant-portal/PortalDashboard";
+import PortalMessages from "@/components/tenant-portal/PortalMessages";
+import PortalDocuments from "@/components/tenant-portal/PortalDocuments";
 
 interface Invoice {
   id: string;
@@ -34,7 +37,9 @@ const TenantPortal = () => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -46,7 +51,7 @@ const TenantPortal = () => {
     const fetchData = async () => {
       if (!tenant?.id) return;
 
-      const [invoicesRes, paymentsRes] = await Promise.all([
+      const [invoicesRes, paymentsRes, messagesRes] = await Promise.all([
         supabase
           .from("invoices")
           .select("*")
@@ -57,10 +62,17 @@ const TenantPortal = () => {
           .select("*")
           .eq("tenant_id", tenant.id)
           .order("payment_date", { ascending: false }),
+        supabase
+          .from("messages")
+          .select("id")
+          .eq("tenant_id", tenant.id)
+          .eq("sender_type", "landlord")
+          .eq("is_read", false),
       ]);
 
       if (invoicesRes.data) setInvoices(invoicesRes.data);
       if (paymentsRes.data) setPayments(paymentsRes.data);
+      if (messagesRes.data) setUnreadMessages(messagesRes.data.length);
       setDataLoading(false);
     };
 
@@ -88,14 +100,6 @@ const TenantPortal = () => {
     }
   };
 
-  const totalDue = invoices
-    .filter((inv) => inv.status === "pending" || inv.status === "overdue")
-    .reduce((sum, inv) => sum + Number(inv.amount), 0);
-
-  const totalPaid = payments
-    .filter((p) => p.status === "completed")
-    .reduce((sum, p) => sum + Number(p.amount), 0);
-
   if (loading || !tenant) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -110,93 +114,74 @@ const TenantPortal = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
+      <header className="sticky top-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg">
               <Building2 className="h-5 w-5" />
             </div>
             <div>
               <h1 className="font-semibold">Tenant Portal</h1>
               <p className="text-sm text-muted-foreground">
-                Welcome, {tenant.first_name}
+                Welcome back, {tenant.first_name}
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-3">
+            {unreadMessages > 0 && (
+              <Badge 
+                className="bg-primary text-primary-foreground cursor-pointer"
+                onClick={() => setActiveTab("messages")}
+              >
+                {unreadMessages} new message{unreadMessages > 1 ? "s" : ""}
+              </Badge>
+            )}
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Summary Cards */}
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardContent className="flex items-center gap-4 pt-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <Home className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Your Unit</p>
-                <p className="text-xl font-semibold">{tenant.unit_number}</p>
-                <p className="text-sm text-muted-foreground">
-                  {tenant.property?.name}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex items-center gap-4 pt-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-warning/10">
-                <DollarSign className="h-6 w-6 text-warning" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Amount Due</p>
-                <p className="text-xl font-semibold">
-                  ${totalDue.toLocaleString()}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {invoices.filter((i) => i.status === "pending").length} pending invoices
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex items-center gap-4 pt-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-success/10">
-                <CreditCard className="h-6 w-6 text-success" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Paid</p>
-                <p className="text-xl font-semibold">
-                  ${totalPaid.toLocaleString()}
-                </p>
-                <p className="text-sm text-muted-foreground">This year</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="invoices" className="space-y-4">
-          <TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
+            <TabsTrigger value="dashboard" className="gap-2">
+              <LayoutDashboard className="h-4 w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
             <TabsTrigger value="invoices" className="gap-2">
               <FileText className="h-4 w-4" />
-              Invoices
+              <span className="hidden sm:inline">Invoices</span>
             </TabsTrigger>
             <TabsTrigger value="payments" className="gap-2">
               <CreditCard className="h-4 w-4" />
-              Payment History
+              <span className="hidden sm:inline">Payments</span>
             </TabsTrigger>
-            <TabsTrigger value="pay" className="gap-2">
-              <DollarSign className="h-4 w-4" />
-              Make Payment
+            <TabsTrigger value="messages" className="gap-2 relative">
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Messages</span>
+              {unreadMessages > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground">
+                  {unreadMessages}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="gap-2">
+              <FolderOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">Documents</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dashboard" className="mt-6">
+            <PortalDashboard
+              tenant={tenant}
+              invoices={invoices}
+              payments={payments}
+              unreadMessages={unreadMessages}
+            />
+          </TabsContent>
 
           <TabsContent value="invoices">
             <Card>
@@ -292,7 +277,7 @@ const TenantPortal = () => {
                             {payment.payment_method.replace("_", " ")}
                           </TableCell>
                           <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="text-muted-foreground max-w-[200px] truncate">
                             {payment.notes || "-"}
                           </TableCell>
                         </TableRow>
@@ -302,12 +287,14 @@ const TenantPortal = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="pay">
-            <Card>
+            {/* Payment Instructions */}
+            <Card className="mt-6">
               <CardHeader>
-                <CardTitle>Make a Payment</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Make a Payment
+                </CardTitle>
                 <CardDescription>
                   Choose a method to pay your rent
                 </CardDescription>
@@ -324,20 +311,15 @@ const TenantPortal = () => {
                         </p>
                       </div>
                     </div>
-                    {totalDue > 0 && (
-                      <div className="rounded-md bg-warning/10 p-3 text-sm text-warning">
-                        You have ${totalDue.toLocaleString()} in pending invoices.
-                      </div>
-                    )}
                   </div>
 
                   <div className="space-y-4">
                     <h3 className="font-medium">Payment Instructions</h3>
-                    <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       <div className="rounded-lg border p-4">
                         <h4 className="font-medium mb-2">Bank Transfer</h4>
                         <p className="text-sm text-muted-foreground">
-                          Contact your landlord for bank transfer details. Include your unit number in the transfer reference.
+                          Contact your landlord for bank transfer details. Include your unit number in the reference.
                         </p>
                       </div>
                       <div className="rounded-lg border p-4">
@@ -346,17 +328,22 @@ const TenantPortal = () => {
                           Make checks payable to your landlord. Include your unit number on the memo line.
                         </p>
                       </div>
-                      <div className="rounded-lg border p-4 bg-muted/20">
-                        <h4 className="font-medium mb-2">Online Payments</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Online payment integration coming soon. Contact your landlord for current payment options.
-                        </p>
-                      </div>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="messages">
+            <PortalMessages 
+              tenantId={tenant.id} 
+              onMessagesRead={() => setUnreadMessages(0)} 
+            />
+          </TabsContent>
+
+          <TabsContent value="documents">
+            <PortalDocuments tenantId={tenant.id} />
           </TabsContent>
         </Tabs>
       </main>

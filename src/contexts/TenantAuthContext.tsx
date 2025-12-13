@@ -9,6 +9,8 @@ interface TenantData {
   email: string;
   unit_number: string;
   monthly_rent: number;
+  lease_start?: string;
+  lease_end?: string;
   property?: {
     name: string;
     address: string;
@@ -50,6 +52,8 @@ export const TenantAuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         unit_number,
         monthly_rent,
+        lease_start,
+        lease_end,
         properties:property_id (
           name,
           address

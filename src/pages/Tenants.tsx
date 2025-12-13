@@ -28,11 +28,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, MoreHorizontal, Mail, Users, Loader2 } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Mail, Users, Loader2, MessageSquare, FileUp } from "lucide-react";
 import { useTenants, Tenant } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
 import TenantDialog from "@/components/tenants/TenantDialog";
 import InviteTenantButton from "@/components/tenants/InviteTenantButton";
+import TenantMessagesDialog from "@/components/tenants/TenantMessagesDialog";
+import UploadDocumentDialog from "@/components/tenants/UploadDocumentDialog";
 import { format } from "date-fns";
 
 const Tenants = () => {
@@ -43,6 +45,9 @@ const Tenants = () => {
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tenantToDelete, setTenantToDelete] = useState<Tenant | null>(null);
+  const [messagesDialogOpen, setMessagesDialogOpen] = useState(false);
+  const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
 
   const filteredTenants = tenants.filter(
     (t) =>
@@ -232,6 +237,20 @@ const Tenants = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedTenant(tenant);
+                                setMessagesDialogOpen(true);
+                              }}>
+                                <MessageSquare className="mr-2 h-4 w-4" />
+                                Messages
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedTenant(tenant);
+                                setDocumentDialogOpen(true);
+                              }}>
+                                <FileUp className="mr-2 h-4 w-4" />
+                                Upload Document
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEdit(tenant)}>
                                 Edit Tenant
                               </DropdownMenuItem>
@@ -286,6 +305,23 @@ const Tenants = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {selectedTenant && (
+        <>
+          <TenantMessagesDialog
+            open={messagesDialogOpen}
+            onOpenChange={setMessagesDialogOpen}
+            tenantId={selectedTenant.id}
+            tenantName={`${selectedTenant.first_name} ${selectedTenant.last_name}`}
+          />
+          <UploadDocumentDialog
+            open={documentDialogOpen}
+            onOpenChange={setDocumentDialogOpen}
+            tenantId={selectedTenant.id}
+            tenantName={`${selectedTenant.first_name} ${selectedTenant.last_name}`}
+          />
+        </>
+      )}
     </DashboardLayout>
   );
 };

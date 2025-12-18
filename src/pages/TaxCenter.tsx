@@ -2,7 +2,6 @@ import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,12 +11,13 @@ import {
   DollarSign,
   Receipt,
   TrendingUp,
-  FileText,
 } from "lucide-react";
 import { useTaxData } from "@/hooks/useTaxData";
 import QuarterlyTaxTracker from "@/components/tax/QuarterlyTaxTracker";
 import YearOverYearChart from "@/components/tax/YearOverYearChart";
 import TaxExportButton from "@/components/tax/TaxExportButton";
+import { ExpenseList } from "@/components/expenses/ExpenseList";
+import { ExpenseSummary } from "@/components/expenses/ExpenseSummary";
 
 const TaxCenter = () => {
   const currentYear = new Date().getFullYear();
@@ -179,7 +179,7 @@ const TaxCenter = () => {
               Year Comparison
             </TabsTrigger>
             <TabsTrigger value="expenses" className="gap-2">
-              <FileText className="h-4 w-4" />
+              <Receipt className="h-4 w-4" />
               Expenses
             </TabsTrigger>
           </TabsList>
@@ -192,36 +192,9 @@ const TaxCenter = () => {
             <YearOverYearChart data={yearlyComparison} />
           </TabsContent>
 
-          <TabsContent value="expenses">
-            <Card className="shadow-md">
-              <CardHeader>
-                <CardTitle className="text-lg">Deductible Expenses</CardTitle>
-                <CardDescription>
-                  Breakdown of tax-deductible expenses for {selectedYear}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isLoading ? (
-                  Array(6).fill(0).map((_, i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
-                  ))
-                ) : (
-                  expenseCategories.map((expense) => (
-                    <div key={expense.category} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-foreground">
-                          {expense.category}
-                        </span>
-                        <span className="text-sm font-medium text-foreground">
-                          {formatCurrency(expense.amount)}
-                        </span>
-                      </div>
-                      <Progress value={expense.percentage} className="h-2" />
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
+          <TabsContent value="expenses" className="space-y-6">
+            <ExpenseSummary selectedYear={selectedYear} />
+            <ExpenseList selectedYear={selectedYear} />
           </TabsContent>
         </Tabs>
       </div>

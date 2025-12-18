@@ -1,76 +1,75 @@
+import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  FileText,
-  Download,
-  Calculator,
   Calendar,
-  CheckCircle2,
-  AlertTriangle,
+  Calculator,
   DollarSign,
   Receipt,
+  TrendingUp,
+  FileText,
 } from "lucide-react";
-
-const taxSummary = {
-  totalIncome: "$669,000",
-  totalExpenses: "$178,500",
-  netIncome: "$490,500",
-  estimatedTax: "$122,625",
-};
-
-const deductibleExpenses = [
-  { category: "Property Maintenance", amount: "$45,200", percentage: 25 },
-  { category: "Property Management Fees", amount: "$33,450", percentage: 19 },
-  { category: "Insurance Premiums", amount: "$28,800", percentage: 16 },
-  { category: "Property Taxes", amount: "$42,000", percentage: 24 },
-  { category: "Utilities (Common Areas)", amount: "$18,050", percentage: 10 },
-  { category: "Legal & Professional Fees", amount: "$11,000", percentage: 6 },
-];
-
-const taxDocuments = [
-  {
-    name: "1099-MISC Forms",
-    description: "Income from rental properties",
-    status: "ready",
-    year: "2024",
-  },
-  {
-    name: "Schedule E",
-    description: "Supplemental income and loss",
-    status: "ready",
-    year: "2024",
-  },
-  {
-    name: "Depreciation Schedule",
-    description: "Property depreciation records",
-    status: "ready",
-    year: "2024",
-  },
-  {
-    name: "Expense Summary",
-    description: "Itemized deductible expenses",
-    status: "pending",
-    year: "2024",
-  },
-];
+import { useTaxData } from "@/hooks/useTaxData";
+import QuarterlyTaxTracker from "@/components/tax/QuarterlyTaxTracker";
+import YearOverYearChart from "@/components/tax/YearOverYearChart";
+import TaxExportButton from "@/components/tax/TaxExportButton";
 
 const TaxCenter = () => {
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const { taxSummary, quarterlyData, yearlyComparison, expenseCategories, isLoading } = useTaxData(selectedYear);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // Calculate days until tax deadline
+  const taxDeadline = new Date(selectedYear + 1, 3, 15); // April 15
+  const today = new Date();
+  const daysUntilDeadline = Math.max(0, Math.ceil((taxDeadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+
+  const years = [currentYear, currentYear - 1, currentYear - 2];
+
   return (
     <DashboardLayout
       title="Tax Center"
       subtitle="Prepare your taxes with organized records and documents"
     >
       <div className="space-y-6">
+        {/* Header with Year Selector and Export */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Select year" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <TaxExportButton
+            taxSummary={taxSummary}
+            expenseCategories={expenseCategories}
+            quarterlyData={quarterlyData}
+            selectedYear={selectedYear}
+          />
+        </div>
+
         {/* Tax Deadline Alert */}
         <Card className="border-warning/50 bg-warning/5 shadow-md">
           <CardContent className="p-4">
@@ -81,7 +80,7 @@ const TaxCenter = () => {
               <div className="flex-1">
                 <p className="font-medium text-foreground">Tax Filing Deadline</p>
                 <p className="text-sm text-muted-foreground">
-                  April 15, 2025 - 125 days remaining
+                  April 15, {selectedYear + 1} - {daysUntilDeadline} days remaining
                 </p>
               </div>
               <Button className="gap-2">
@@ -94,158 +93,137 @@ const TaxCenter = () => {
 
         {/* Tax Summary Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="shadow-md">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
-                  <DollarSign className="h-5 w-5 text-success" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Income</p>
-                  <p className="text-xl font-bold text-foreground">
-                    {taxSummary.totalIncome}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-md">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10">
-                  <Receipt className="h-5 w-5 text-destructive" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Expenses</p>
-                  <p className="text-xl font-bold text-foreground">
-                    {taxSummary.totalExpenses}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-md">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <DollarSign className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Net Income</p>
-                  <p className="text-xl font-bold text-foreground">
-                    {taxSummary.netIncome}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-md">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
-                  <Calculator className="h-5 w-5 text-warning" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Estimated Tax</p>
-                  <p className="text-xl font-bold text-foreground">
-                    {taxSummary.estimatedTax}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Deductible Expenses */}
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-lg">Deductible Expenses</CardTitle>
-              <CardDescription>
-                Breakdown of tax-deductible expenses for 2024
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {deductibleExpenses.map((expense) => (
-                <div key={expense.category} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-foreground">
-                      {expense.category}
-                    </span>
-                    <span className="text-sm font-medium text-foreground">
-                      {expense.amount}
-                    </span>
+          {isLoading ? (
+            Array(4).fill(0).map((_, i) => (
+              <Card key={i} className="shadow-md">
+                <CardContent className="p-5">
+                  <Skeleton className="h-16 w-full" />
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <>
+              <Card className="shadow-md">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
+                      <DollarSign className="h-5 w-5 text-success" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Income</p>
+                      <p className="text-xl font-bold text-foreground">
+                        {formatCurrency(taxSummary.totalIncome)}
+                      </p>
+                    </div>
                   </div>
-                  <Progress value={expense.percentage} className="h-2" />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Tax Documents */}
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-lg">Tax Documents</CardTitle>
-              <CardDescription>
-                Download your tax forms and supporting documents
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead>Document</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[100px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {taxDocuments.map((doc) => (
-                    <TableRow key={doc.name} className="table-row-hover">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium text-foreground">
-                              {doc.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {doc.description}
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {doc.status === "ready" ? (
-                          <span className="badge-success flex items-center gap-1 w-fit">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Ready
-                          </span>
-                        ) : (
-                          <span className="badge-warning flex items-center gap-1 w-fit">
-                            <AlertTriangle className="h-3 w-3" />
-                            Pending
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-1"
-                          disabled={doc.status !== "ready"}
-                        >
-                          <Download className="h-4 w-4" />
-                          Download
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+              <Card className="shadow-md">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10">
+                      <Receipt className="h-5 w-5 text-destructive" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Expenses</p>
+                      <p className="text-xl font-bold text-foreground">
+                        {formatCurrency(taxSummary.totalExpenses)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-md">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Net Income</p>
+                      <p className="text-xl font-bold text-foreground">
+                        {formatCurrency(taxSummary.netIncome)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-md">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
+                      <Calculator className="h-5 w-5 text-warning" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Estimated Tax</p>
+                      <p className="text-xl font-bold text-foreground">
+                        {formatCurrency(taxSummary.estimatedTax)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
+
+        {/* Tabs for different views */}
+        <Tabs defaultValue="quarterly" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="quarterly" className="gap-2">
+              <Calendar className="h-4 w-4" />
+              Quarterly Tracker
+            </TabsTrigger>
+            <TabsTrigger value="comparison" className="gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Year Comparison
+            </TabsTrigger>
+            <TabsTrigger value="expenses" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Expenses
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="quarterly">
+            <QuarterlyTaxTracker data={quarterlyData} />
+          </TabsContent>
+
+          <TabsContent value="comparison">
+            <YearOverYearChart data={yearlyComparison} />
+          </TabsContent>
+
+          <TabsContent value="expenses">
+            <Card className="shadow-md">
+              <CardHeader>
+                <CardTitle className="text-lg">Deductible Expenses</CardTitle>
+                <CardDescription>
+                  Breakdown of tax-deductible expenses for {selectedYear}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isLoading ? (
+                  Array(6).fill(0).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))
+                ) : (
+                  expenseCategories.map((expense) => (
+                    <div key={expense.category} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-foreground">
+                          {expense.category}
+                        </span>
+                        <span className="text-sm font-medium text-foreground">
+                          {formatCurrency(expense.amount)}
+                        </span>
+                      </div>
+                      <Progress value={expense.percentage} className="h-2" />
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

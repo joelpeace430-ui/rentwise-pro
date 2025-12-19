@@ -1,1 +1,4 @@
 project_id = "elebtxleydldblwcidmq"
+
+[functions.send-tax-reminder]
+verify_jwt = false

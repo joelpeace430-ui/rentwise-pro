@@ -16,6 +16,7 @@ import { useTaxData } from "@/hooks/useTaxData";
 import QuarterlyTaxTracker from "@/components/tax/QuarterlyTaxTracker";
 import YearOverYearChart from "@/components/tax/YearOverYearChart";
 import IncomeExpenseChart from "@/components/tax/IncomeExpenseChart";
+import TaxProjectionChart from "@/components/tax/TaxProjectionChart";
 import TaxExportButton from "@/components/tax/TaxExportButton";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
 import { ExpenseSummary } from "@/components/expenses/ExpenseSummary";
@@ -168,8 +169,11 @@ const TaxCenter = () => {
           )}
         </div>
 
-        {/* Interactive Income & Tax Chart */}
-        <IncomeExpenseChart selectedYear={selectedYear} />
+        {/* Interactive Charts */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <IncomeExpenseChart selectedYear={selectedYear} />
+          <TaxProjectionChart selectedYear={selectedYear} />
+        </div>
 
         {/* Tabs for different views */}
         <Tabs defaultValue="quarterly" className="space-y-6">

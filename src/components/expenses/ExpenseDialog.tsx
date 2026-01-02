@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { useExpenses, EXPENSE_CATEGORIES, CreateExpenseInput, Expense } from "@/hooks/useExpenses";
 import { useProperties } from "@/hooks/useProperties";
 import { format } from "date-fns";
+import { ReceiptUpload } from "./ReceiptUpload";
 
 interface ExpenseDialogProps {
   open: boolean;
@@ -29,6 +30,7 @@ export const ExpenseDialog = ({ open, onOpenChange, expense }: ExpenseDialogProp
     expense_date: expense?.expense_date || format(new Date(), "yyyy-MM-dd"),
     vendor: expense?.vendor || "",
     is_tax_deductible: expense?.is_tax_deductible ?? true,
+    receipt_url: expense?.receipt_url || null,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,6 +59,7 @@ export const ExpenseDialog = ({ open, onOpenChange, expense }: ExpenseDialogProp
       expense_date: format(new Date(), "yyyy-MM-dd"),
       vendor: "",
       is_tax_deductible: true,
+      receipt_url: null,
     });
   };
 
@@ -163,6 +166,15 @@ export const ExpenseDialog = ({ open, onOpenChange, expense }: ExpenseDialogProp
               id="is_tax_deductible"
               checked={formData.is_tax_deductible}
               onCheckedChange={(checked) => setFormData({ ...formData, is_tax_deductible: checked })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Receipt (Optional)</Label>
+            <ReceiptUpload
+              value={formData.receipt_url}
+              onChange={(url) => setFormData({ ...formData, receipt_url: url })}
+              disabled={isSubmitting}
             />
           </div>
 

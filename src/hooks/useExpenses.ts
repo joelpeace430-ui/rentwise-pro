@@ -27,6 +27,7 @@ export interface CreateExpenseInput {
   expense_date: string;
   vendor?: string;
   is_tax_deductible?: boolean;
+  receipt_url?: string | null;
 }
 
 export const EXPENSE_CATEGORIES = [

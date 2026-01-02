@@ -11,6 +11,7 @@ import {
   DollarSign,
   Receipt,
   TrendingUp,
+  Lightbulb,
 } from "lucide-react";
 import { useTaxData } from "@/hooks/useTaxData";
 import QuarterlyTaxTracker from "@/components/tax/QuarterlyTaxTracker";
@@ -18,6 +19,9 @@ import YearOverYearChart from "@/components/tax/YearOverYearChart";
 import IncomeExpenseChart from "@/components/tax/IncomeExpenseChart";
 import TaxProjectionChart from "@/components/tax/TaxProjectionChart";
 import TaxExportButton from "@/components/tax/TaxExportButton";
+import TaxEfficiencyScore from "@/components/tax/TaxEfficiencyScore";
+import TaxSavingsRecommendations from "@/components/tax/TaxSavingsRecommendations";
+import TaxCalendar from "@/components/tax/TaxCalendar";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
 import { ExpenseSummary } from "@/components/expenses/ExpenseSummary";
 
@@ -167,6 +171,13 @@ const TaxCenter = () => {
               </Card>
             </>
           )}
+        </div>
+
+        {/* Tax Efficiency & Recommendations */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <TaxEfficiencyScore selectedYear={selectedYear} />
+          <TaxSavingsRecommendations selectedYear={selectedYear} />
+          <TaxCalendar selectedYear={selectedYear} />
         </div>
 
         {/* Interactive Charts */}

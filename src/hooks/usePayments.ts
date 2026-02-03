@@ -9,7 +9,7 @@ export interface Payment {
   invoice_id: string | null;
   tenant_id: string;
   amount: number;
-  payment_method: "bank_transfer" | "credit_card" | "ach" | "cash" | "check";
+  payment_method: "bank_transfer" | "credit_card" | "ach" | "cash" | "check" | "mpesa";
   payment_date: string;
   status: "completed" | "processing" | "failed";
   notes: string | null;
@@ -29,7 +29,7 @@ export interface CreatePaymentInput {
   invoice_id?: string;
   tenant_id: string;
   amount: number;
-  payment_method: "bank_transfer" | "credit_card" | "ach" | "cash" | "check";
+  payment_method: "bank_transfer" | "credit_card" | "ach" | "cash" | "check" | "mpesa";
   payment_date: string;
   status?: "completed" | "processing" | "failed";
   notes?: string;

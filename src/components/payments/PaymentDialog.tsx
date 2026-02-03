@@ -101,6 +101,7 @@ const PaymentDialog = ({ open, onOpenChange, payment, tenants, invoices, onSave 
     ach: "ACH",
     cash: "Cash",
     check: "Check",
+    mpesa: "M-Pesa",
   };
 
   return (

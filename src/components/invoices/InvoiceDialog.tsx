@@ -131,7 +131,7 @@ const InvoiceDialog = ({ open, onOpenChange, invoice, tenants, onSave }: Invoice
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount ($)</Label>
+                <Label htmlFor="amount">Amount (KSH)</Label>
                 <Input
                   id="amount"
                   type="number"

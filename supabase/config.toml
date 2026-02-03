@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.mpesa-callback]
 verify_jwt = false
+
+[functions.send-rent-reminder]
+verify_jwt = false
+
+[functions.generate-invoices]
+verify_jwt = false

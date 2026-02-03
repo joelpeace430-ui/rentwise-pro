@@ -18,9 +18,9 @@ const Index = () => {
   const { stats, loading } = useDashboardStats();
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "USD",
+      currency: "KES",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);

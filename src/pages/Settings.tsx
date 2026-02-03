@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -14,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User, Bell, CreditCard, Shield, Building2, Loader2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, Bell, CreditCard, Shield, Building2, Loader2, Mail, Phone, MapPin, FileText, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -166,290 +168,402 @@ const Settings = () => {
       title="Settings"
       subtitle="Manage your account and preferences"
     >
-      <div className="max-w-4xl space-y-6">
-        {/* Profile Section */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-lg">Profile</CardTitle>
-            </div>
-            <CardDescription>
-              Update your personal information
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center gap-6">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src="/placeholder.svg" alt="Profile" />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                  {getInitials()}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <Button variant="outline" size="sm">
+      <Tabs defaultValue="profile" className="max-w-5xl">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
+          <TabsTrigger value="profile" className="gap-2">
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">Profile</span>
+          </TabsTrigger>
+          <TabsTrigger value="business" className="gap-2">
+            <Building2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Business</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2">
+            <Bell className="h-4 w-4" />
+            <span className="hidden sm:inline">Alerts</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="gap-2">
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">Security</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="profile" className="space-y-6">
+          {/* Profile Card */}
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-primary/5 to-accent/5">
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                <div className="relative">
+                  <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
+                    <AvatarImage src="/placeholder.svg" alt="Profile" />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
+                      {getInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -bottom-1 -right-1 bg-success rounded-full p-1">
+                    <CheckCircle2 className="h-5 w-5 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <h2 className="text-2xl font-bold text-foreground">
+                    {firstName || lastName ? `${firstName} ${lastName}` : "Welcome!"}
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-3 text-muted-foreground">
+                    {email && (
+                      <div className="flex items-center gap-1.5">
+                        <Mail className="h-4 w-4" />
+                        <span className="text-sm">{email}</span>
+                      </div>
+                    )}
+                    {phone && (
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="h-4 w-4" />
+                        <span className="text-sm">{phone}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Badge variant="secondary">Property Manager</Badge>
+                    <Badge variant="outline" className="border-success text-success">Active</Badge>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" className="shrink-0">
                   Change Photo
                 </Button>
-                <p className="text-xs text-muted-foreground mt-2">
-                  JPG, PNG or GIF. Max size 2MB.
-                </p>
               </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-            </div>
-            <Button onClick={handleSaveProfile} disabled={saving}>
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Business Info */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-lg">Business Information</CardTitle>
-            </div>
-            <CardDescription>
-              Configure your property management business details
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="businessName">Business Name</Label>
-                <Input
-                  id="businessName"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="Your Property Management LLC"
-                />
+          {/* Personal Information */}
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
+                Personal Information
+              </CardTitle>
+              <CardDescription>
+                Update your personal details
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-sm font-medium">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="h-11"
+                    placeholder="Enter your first name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-sm font-medium">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="h-11"
+                    placeholder="Enter your last name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="h-11 pl-10"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="h-11 pl-10"
+                      placeholder="+254 7XX XXX XXX"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="taxId">Tax ID / EIN</Label>
-                <Input
-                  id="taxId"
-                  value={taxId}
-                  onChange={(e) => setTaxId(e.target.value)}
-                  placeholder="XX-XXXXXXX"
-                />
+              <div className="flex justify-end pt-2">
+                <Button onClick={handleSaveProfile} disabled={saving} className="min-w-[140px]">
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="businessAddress">Business Address</Label>
-                <Input
-                  id="businessAddress"
-                  value={businessAddress}
-                  onChange={(e) => setBusinessAddress(e.target.value)}
-                  placeholder="123 Business Ave, Suite 100, City, State ZIP"
-                />
-              </div>
-            </div>
-            <Button onClick={handleSaveBusinessInfo} disabled={saving}>
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Update Business Info"
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-        {/* Notifications */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Bell className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-lg">Notifications</CardTitle>
-            </div>
-            <CardDescription>
-              Configure how you receive notifications
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">Payment Received</p>
-                <p className="text-sm text-muted-foreground">
-                  Get notified when a tenant makes a payment
-                </p>
+        <TabsContent value="business" className="space-y-6">
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                Business Information
+              </CardTitle>
+              <CardDescription>
+                Configure your property management business details
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="businessName" className="text-sm font-medium">Business Name</Label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="businessName"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      placeholder="Your Property Management Co."
+                      className="h-11 pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="taxId" className="text-sm font-medium">Tax ID / KRA PIN</Label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="taxId"
+                      value={taxId}
+                      onChange={(e) => setTaxId(e.target.value)}
+                      placeholder="A123456789X"
+                      className="h-11 pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="businessAddress" className="text-sm font-medium">Business Address</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="businessAddress"
+                      value={businessAddress}
+                      onChange={(e) => setBusinessAddress(e.target.value)}
+                      placeholder="123 Business Ave, Nairobi, Kenya"
+                      className="h-11 pl-10"
+                    />
+                  </div>
+                </div>
               </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">Overdue Payments</p>
-                <p className="text-sm text-muted-foreground">
-                  Receive alerts for overdue rent payments
-                </p>
+              <div className="flex justify-end pt-2">
+                <Button onClick={handleSaveBusinessInfo} disabled={saving} className="min-w-[140px]">
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Update Business Info"
+                  )}
+                </Button>
               </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">Lease Expiration</p>
-                <p className="text-sm text-muted-foreground">
-                  Get reminded when leases are about to expire
-                </p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">Monthly Reports</p>
-                <p className="text-sm text-muted-foreground">
-                  Receive monthly financial summaries
-                </p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Payment Settings */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-lg">Payment Settings</CardTitle>
-            </div>
-            <CardDescription>
-              Configure payment collection preferences
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Default Due Date</Label>
-                <Select defaultValue="1">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select day" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1st of the month</SelectItem>
-                    <SelectItem value="5">5th of the month</SelectItem>
-                    <SelectItem value="15">15th of the month</SelectItem>
-                  </SelectContent>
-                </Select>
+          {/* Payment Settings */}
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-primary" />
+                Payment Settings
+              </CardTitle>
+              <CardDescription>
+                Configure payment collection preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Default Due Date</Label>
+                  <Select defaultValue="5">
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Select day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1st of the month</SelectItem>
+                      <SelectItem value="5">5th of the month</SelectItem>
+                      <SelectItem value="10">10th of the month</SelectItem>
+                      <SelectItem value="15">15th of the month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Late Fee Grace Period</Label>
+                  <Select defaultValue="5">
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Select days" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 days</SelectItem>
+                      <SelectItem value="5">5 days</SelectItem>
+                      <SelectItem value="7">7 days</SelectItem>
+                      <SelectItem value="10">10 days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lateFee">Late Fee Amount (KSH)</Label>
+                  <Input id="lateFee" type="text" defaultValue="500" className="h-11" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Currency</Label>
+                  <Select defaultValue="kes">
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kes">KES (KSH)</SelectItem>
+                      <SelectItem value="usd">USD ($)</SelectItem>
+                      <SelectItem value="eur">EUR (€)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Late Fee Grace Period</Label>
-                <Select defaultValue="5">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select days" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">3 days</SelectItem>
-                    <SelectItem value="5">5 days</SelectItem>
-                    <SelectItem value="7">7 days</SelectItem>
-                    <SelectItem value="10">10 days</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex justify-end pt-2">
+                <Button className="min-w-[140px]">Save Payment Settings</Button>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lateFee">Late Fee Amount</Label>
-                <Input id="lateFee" type="text" defaultValue="$50.00" />
-              </div>
-              <div className="space-y-2">
-                <Label>Currency</Label>
-                <Select defaultValue="usd">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="usd">USD ($)</SelectItem>
-                    <SelectItem value="eur">EUR (€)</SelectItem>
-                    <SelectItem value="gbp">GBP (£)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <Button>Save Payment Settings</Button>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-        {/* Security */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-lg">Security</CardTitle>
-            </div>
-            <CardDescription>
-              Manage your account security settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">
-                  Two-Factor Authentication
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Add an extra layer of security to your account
-                </p>
+        <TabsContent value="notifications" className="space-y-6">
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" />
+                Notification Preferences
+              </CardTitle>
+              <CardDescription>
+                Configure how and when you receive alerts
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              {[
+                {
+                  title: "Payment Received",
+                  description: "Get notified when a tenant makes a payment",
+                  defaultChecked: true,
+                },
+                {
+                  title: "Overdue Payments",
+                  description: "Receive alerts for overdue rent payments",
+                  defaultChecked: true,
+                },
+                {
+                  title: "Automatic Rent Reminders",
+                  description: "System sends reminders to tenants with unpaid rent",
+                  defaultChecked: true,
+                },
+                {
+                  title: "Lease Expiration",
+                  description: "Get reminded when leases are about to expire",
+                  defaultChecked: true,
+                },
+                {
+                  title: "Monthly Reports",
+                  description: "Receive monthly financial summaries",
+                  defaultChecked: true,
+                },
+                {
+                  title: "New Tenant Messages",
+                  description: "Get notified when tenants send you messages",
+                  defaultChecked: true,
+                },
+              ].map((item, index) => (
+                <div key={item.title}>
+                  <div className="flex items-center justify-between py-4">
+                    <div className="space-y-0.5">
+                      <p className="font-medium text-foreground">{item.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.description}
+                      </p>
+                    </div>
+                    <Switch defaultChecked={item.defaultChecked} />
+                  </div>
+                  {index < 5 && <Separator />}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-6">
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                Security Settings
+              </CardTitle>
+              <CardDescription>
+                Manage your account security
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <div className="flex items-center justify-between py-4">
+                <div className="space-y-0.5">
+                  <p className="font-medium text-foreground">
+                    Two-Factor Authentication
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Add an extra layer of security to your account
+                  </p>
+                </div>
+                <Button variant="outline">Enable</Button>
               </div>
-              <Button variant="outline">Enable</Button>
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground">Change Password</p>
-                <p className="text-sm text-muted-foreground">
-                  Update your account password
-                </p>
+              <Separator />
+              <div className="flex items-center justify-between py-4">
+                <div className="space-y-0.5">
+                  <p className="font-medium text-foreground">Change Password</p>
+                  <p className="text-sm text-muted-foreground">
+                    Update your account password
+                  </p>
+                </div>
+                <Button variant="outline">Change</Button>
               </div>
-              <Button variant="outline">Change</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              <Separator />
+              <div className="flex items-center justify-between py-4">
+                <div className="space-y-0.5">
+                  <p className="font-medium text-foreground">Active Sessions</p>
+                  <p className="text-sm text-muted-foreground">
+                    Manage devices logged into your account
+                  </p>
+                </div>
+                <Button variant="outline">View All</Button>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between py-4">
+                <div className="space-y-0.5">
+                  <p className="font-medium text-destructive">Delete Account</p>
+                  <p className="text-sm text-muted-foreground">
+                    Permanently delete your account and all data
+                  </p>
+                </div>
+                <Button variant="destructive" size="sm">Delete</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 };

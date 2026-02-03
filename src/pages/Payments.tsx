@@ -34,11 +34,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, MoreHorizontal, CreditCard, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { Plus, Search, MoreHorizontal, CreditCard, CheckCircle, Clock, AlertCircle, Loader2, Smartphone } from "lucide-react";
 import { usePayments, Payment } from "@/hooks/usePayments";
 import { useTenants } from "@/hooks/useTenants";
 import { useInvoices } from "@/hooks/useInvoices";
 import PaymentDialog from "@/components/payments/PaymentDialog";
+import MpesaPaymentDialog from "@/components/payments/MpesaPaymentDialog";
 import { format } from "date-fns";
 
 const Payments = () => {
@@ -48,6 +49,7 @@ const Payments = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [mpesaDialogOpen, setMpesaDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
@@ -108,6 +110,7 @@ const Payments = () => {
     ach: "ACH",
     cash: "Cash",
     check: "Check",
+    mpesa: "M-Pesa",
   };
 
   const summaryStats = [
@@ -184,17 +187,28 @@ const Payments = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button
-            className="gap-2"
-            onClick={() => {
-              setEditingPayment(null);
-              setDialogOpen(true);
-            }}
-            disabled={tenants.length === 0}
-          >
-            <Plus className="h-4 w-4" />
-            Record Payment
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="gap-2 border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
+              onClick={() => setMpesaDialogOpen(true)}
+              disabled={tenants.length === 0}
+            >
+              <Smartphone className="h-4 w-4" />
+              M-Pesa
+            </Button>
+            <Button
+              className="gap-2"
+              onClick={() => {
+                setEditingPayment(null);
+                setDialogOpen(true);
+              }}
+              disabled={tenants.length === 0}
+            >
+              <Plus className="h-4 w-4" />
+              Record Payment
+            </Button>
+          </div>
         </div>
 
         {tenants.length === 0 && (
@@ -327,6 +341,19 @@ const Payments = () => {
         tenants={tenants}
         invoices={invoices}
         onSave={handleSave}
+      />
+
+      <MpesaPaymentDialog
+        open={mpesaDialogOpen}
+        onOpenChange={setMpesaDialogOpen}
+        tenants={tenants}
+        invoices={invoices}
+        onPaymentInitiated={() => {
+          // Refresh payments list after M-Pesa initiation
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        }}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

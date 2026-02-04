@@ -100,6 +100,18 @@ export const usePayments = () => {
         .eq("id", input.invoice_id);
     }
 
+    // Auto-generate receipt for completed payments
+    if (input.status === "completed" && data) {
+      try {
+        await supabase.functions.invoke("generate-receipt", {
+          body: { paymentId: data.id },
+        });
+      } catch (receiptError) {
+        console.error("Failed to generate receipt:", receiptError);
+        // Don't fail the payment if receipt generation fails
+      }
+    }
+
     toast({
       title: "Success",
       description: "Payment recorded successfully",

@@ -27,9 +27,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, MoreHorizontal, Building2, MapPin, Loader2 } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Building2, MapPin, Loader2, Sparkles } from "lucide-react";
 import { useProperties, Property } from "@/hooks/useProperties";
 import PropertyDialog from "@/components/properties/PropertyDialog";
+import { SmartPricingCard } from "@/components/ai/SmartPricingCard";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const Properties = () => {
   const { properties, loading, createProperty, updateProperty, deleteProperty } = useProperties();
@@ -38,6 +45,8 @@ const Properties = () => {
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
+  const [pricingSheetOpen, setPricingSheetOpen] = useState(false);
+  const [pricingProperty, setPricingProperty] = useState<Property | null>(null);
 
   const filteredProperties = properties.filter(
     (p) =>
@@ -193,6 +202,13 @@ const Properties = () => {
                             <DropdownMenuItem onClick={() => handleEdit(property)}>
                               Edit Property
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setPricingProperty(property);
+                              setPricingSheetOpen(true);
+                            }}>
+                              <Sparkles className="mr-2 h-4 w-4" />
+                              AI Pricing
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-destructive"
                               onClick={() => handleDelete(property)}
@@ -241,6 +257,22 @@ const Properties = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Sheet open={pricingSheetOpen} onOpenChange={setPricingSheetOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>AI Pricing Suggestions</SheetTitle>
+          </SheetHeader>
+          {pricingProperty && (
+            <div className="mt-6">
+              <SmartPricingCard
+                propertyId={pricingProperty.id}
+                propertyName={pricingProperty.name}
+              />
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>
   );
 };

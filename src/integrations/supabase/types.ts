@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_chat_history: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          tenant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          tenant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          tenant_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_history_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string
@@ -250,6 +285,50 @@ export type Database = {
           },
         ]
       }
+      pricing_suggestions: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          current_rent: number
+          id: string
+          market_analysis: string | null
+          property_id: string
+          suggested_rent: number
+          unit_number: string | null
+          vacancy_rate: number | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          current_rent: number
+          id?: string
+          market_analysis?: string | null
+          property_id: string
+          suggested_rent: number
+          unit_number?: string | null
+          vacancy_rate?: number | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          current_rent?: number
+          id?: string
+          market_analysis?: string | null
+          property_id?: string
+          suggested_rent?: number
+          unit_number?: string | null
+          vacancy_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_suggestions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           business_address: string | null
@@ -325,6 +404,69 @@ export type Database = {
         }
         Relationships: []
       }
+      receipts: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          issued_at: string
+          payment_date: string
+          payment_id: string
+          payment_method: string
+          pdf_url: string | null
+          receipt_number: string
+          sent_at: string | null
+          sent_to_email: string | null
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          issued_at?: string
+          payment_date: string
+          payment_id: string
+          payment_method: string
+          pdf_url?: string | null
+          receipt_number: string
+          sent_at?: string | null
+          sent_to_email?: string | null
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          issued_at?: string
+          payment_date?: string
+          payment_id?: string
+          payment_method?: string
+          pdf_url?: string | null
+          receipt_number?: string
+          sent_at?: string | null
+          sent_to_email?: string | null
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_invitations: {
         Row: {
           created_at: string
@@ -355,6 +497,56 @@ export type Database = {
             foreignKeyName: "tenant_invitations_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_payment_scores: {
+        Row: {
+          average_days_late: number | null
+          created_at: string
+          id: string
+          last_calculated_at: string | null
+          late_payments: number | null
+          on_time_payments: number | null
+          payment_score: number | null
+          risk_level: string | null
+          tenant_id: string
+          total_payments: number | null
+          updated_at: string
+        }
+        Insert: {
+          average_days_late?: number | null
+          created_at?: string
+          id?: string
+          last_calculated_at?: string | null
+          late_payments?: number | null
+          on_time_payments?: number | null
+          payment_score?: number | null
+          risk_level?: string | null
+          tenant_id: string
+          total_payments?: number | null
+          updated_at?: string
+        }
+        Update: {
+          average_days_late?: number | null
+          created_at?: string
+          id?: string
+          last_calculated_at?: string | null
+          late_payments?: number | null
+          on_time_payments?: number | null
+          payment_score?: number | null
+          risk_level?: string | null
+          tenant_id?: string
+          total_payments?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_payment_scores_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
@@ -422,15 +614,55 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          assigned_by: string | null
+          assigned_properties: string[] | null
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          assigned_properties?: string[] | null
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          assigned_properties?: string[] | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "landlord" | "agent" | "caretaker"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -557,6 +789,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "landlord", "agent", "caretaker"],
+    },
   },
 } as const

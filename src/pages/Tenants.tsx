@@ -28,14 +28,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, MoreHorizontal, Mail, Users, Loader2, MessageSquare, FileUp } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Mail, Users, Loader2, MessageSquare, FileUp, Brain } from "lucide-react";
 import { useTenants, Tenant } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
 import TenantDialog from "@/components/tenants/TenantDialog";
 import InviteTenantButton from "@/components/tenants/InviteTenantButton";
 import TenantMessagesDialog from "@/components/tenants/TenantMessagesDialog";
 import UploadDocumentDialog from "@/components/tenants/UploadDocumentDialog";
+import { PaymentScoreCard } from "@/components/ai/PaymentScoreCard";
 import { format } from "date-fns";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const Tenants = () => {
   const { tenants, loading, createTenant, updateTenant, deleteTenant } = useTenants();
@@ -48,6 +55,8 @@ const Tenants = () => {
   const [messagesDialogOpen, setMessagesDialogOpen] = useState(false);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [scoreSheetOpen, setScoreSheetOpen] = useState(false);
+  const [scoringTenant, setScoringTenant] = useState<Tenant | null>(null);
 
   const filteredTenants = tenants.filter(
     (t) =>
@@ -260,6 +269,13 @@ const Tenants = () => {
                               >
                                 Remove Tenant
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                setScoringTenant(tenant);
+                                setScoreSheetOpen(true);
+                              }}>
+                                <Brain className="mr-2 h-4 w-4" />
+                                AI Payment Score
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -322,6 +338,22 @@ const Tenants = () => {
           />
         </>
       )}
+
+      <Sheet open={scoreSheetOpen} onOpenChange={setScoreSheetOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>AI Payment Analysis</SheetTitle>
+          </SheetHeader>
+          {scoringTenant && (
+            <div className="mt-6">
+              <PaymentScoreCard
+                tenantId={scoringTenant.id}
+                tenantName={`${scoringTenant.first_name} ${scoringTenant.last_name}`}
+              />
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </DashboardLayout>
   );
 };

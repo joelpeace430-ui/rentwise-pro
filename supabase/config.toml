@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.generate-invoices]
 verify_jwt = false
+
+[functions.generate-receipt]
+verify_jwt = false
+
+[functions.ai-assistant]
+verify_jwt = false

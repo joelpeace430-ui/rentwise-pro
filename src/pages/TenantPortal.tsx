@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import PortalDashboard from "@/components/tenant-portal/PortalDashboard";
 import PortalMessages from "@/components/tenant-portal/PortalMessages";
 import PortalDocuments from "@/components/tenant-portal/PortalDocuments";
+import { TenantChatbot } from "@/components/ai/TenantChatbot";
 
 interface Invoice {
   id: string;
@@ -347,6 +348,9 @@ const TenantPortal = () => {
           </TabsContent>
         </Tabs>
       </main>
+      
+      {/* AI Chatbot for tenant assistance */}
+      <TenantChatbot />
     </div>
   );
 };

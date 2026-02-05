@@ -198,7 +198,9 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_urls: string[] | null
           is_read: boolean
+          message_type: string | null
           sender_type: string
           tenant_id: string
         }
@@ -206,7 +208,9 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          image_urls?: string[] | null
           is_read?: boolean
+          message_type?: string | null
           sender_type: string
           tenant_id: string
         }
@@ -214,7 +218,9 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          image_urls?: string[] | null
           is_read?: boolean
+          message_type?: string | null
           sender_type?: string
           tenant_id?: string
         }

@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Wrench, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import {
   Dialog,
@@ -20,6 +20,8 @@ interface Message {
   content: string;
   is_read: boolean;
   created_at: string;
+  image_urls?: string[];
+  message_type?: string;
 }
 
 interface TenantMessagesDialogProps {
@@ -164,7 +166,37 @@ const TenantMessagesDialog = ({ open, onOpenChange, tenantId, tenantName }: Tena
                           : "bg-muted rounded-bl-md"
                       }`}
                     >
+                      {message.message_type === "maintenance" && (
+                        <div className="flex items-center gap-1 mb-2">
+                          <Badge variant="secondary" className="gap-1 text-xs bg-warning/20 text-warning-foreground border-warning">
+                            <Wrench className="h-3 w-3" />
+                            Maintenance Request
+                          </Badge>
+                        </div>
+                      )}
                       <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                      {message.image_urls && message.image_urls.length > 0 && (
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          {message.image_urls.map((url, idx) => (
+                            <a 
+                              key={idx} 
+                              href={url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="block relative group"
+                            >
+                              <img 
+                                src={url} 
+                                alt={`Maintenance photo ${idx + 1}`} 
+                                className="rounded-lg max-h-32 w-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                <ExternalLink className="h-5 w-5 text-white" />
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
                       <p
                         className={`text-xs mt-1 ${
                           message.sender_type === "landlord" ? "text-primary-foreground/70" : "text-muted-foreground"

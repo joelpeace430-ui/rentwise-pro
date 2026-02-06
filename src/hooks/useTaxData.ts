@@ -8,6 +8,8 @@ interface TaxSummary {
   totalExpenses: number;
   netIncome: number;
   estimatedTax: number;
+  effectiveTaxRate: number;
+  monthlyTaxLiability: number;
 }
 
 interface QuarterlyData {
@@ -30,6 +32,36 @@ interface ExpenseCategory {
   amount: number;
   percentage: number;
 }
+
+// KRA Individual Tax Bands (Annual - 2024/2025)
+const calculateKRATax = (annualIncome: number): number => {
+  if (annualIncome <= 0) return 0;
+
+  let tax = 0;
+  const bands = [
+    { limit: 288000, rate: 0.10 },
+    { limit: 388000, rate: 0.25 },
+    { limit: 6000000, rate: 0.30 },
+    { limit: 9600000, rate: 0.325 },
+    { limit: Infinity, rate: 0.35 },
+  ];
+
+  let remaining = annualIncome;
+  let previousLimit = 0;
+
+  for (const band of bands) {
+    const taxableInBand = Math.min(remaining, band.limit - previousLimit);
+    if (taxableInBand <= 0) break;
+    tax += taxableInBand * band.rate;
+    remaining -= taxableInBand;
+    previousLimit = band.limit;
+  }
+
+  // Personal relief (KES 2,400 per month = 28,800 per year)
+  tax = Math.max(0, tax - 28800);
+
+  return tax;
+};
 
 export const useTaxData = (selectedYear: number = new Date().getFullYear()) => {
   const { user } = useAuth();
@@ -112,22 +144,28 @@ export const useTaxData = (selectedYear: number = new Date().getFullYear()) => {
     .filter((e) => e.is_tax_deductible)
     .reduce((sum, e) => sum + Number(e.amount), 0);
 
-  // Calculate tax summary
-  const taxSummary: TaxSummary = {
-    totalIncome: payments.reduce((sum, p) => sum + Number(p.amount), 0),
-    totalExpenses: totalExpensesAmount,
-    netIncome: 0,
-    estimatedTax: 0,
-  };
-  taxSummary.netIncome = taxSummary.totalIncome - taxSummary.totalExpenses;
-  taxSummary.estimatedTax = Math.max(0, taxSummary.netIncome * 0.25); // 25% tax rate estimate
+  // Calculate tax summary using KRA bands
+  const totalIncome = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const netIncome = totalIncome - totalExpensesAmount;
+  const estimatedTax = calculateKRATax(netIncome);
+  const effectiveTaxRate = netIncome > 0 ? (estimatedTax / netIncome) * 100 : 0;
 
-  // Calculate quarterly data
+  const taxSummary: TaxSummary = {
+    totalIncome,
+    totalExpenses: totalExpensesAmount,
+    netIncome,
+    estimatedTax,
+    effectiveTaxRate,
+    monthlyTaxLiability: estimatedTax / 12,
+  };
+
+  // Calculate quarterly data with KRA instalment dates
+  // KRA instalment tax due: 20th of 4th, 6th, 9th, 12th months
   const quarterlyData: QuarterlyData[] = [
-    { quarter: "Q1", dueDate: `April 15, ${selectedYear}`, isPaid: false, income: 0, estimatedTax: 0 },
-    { quarter: "Q2", dueDate: `June 15, ${selectedYear}`, isPaid: false, income: 0, estimatedTax: 0 },
-    { quarter: "Q3", dueDate: `September 15, ${selectedYear}`, isPaid: false, income: 0, estimatedTax: 0 },
-    { quarter: "Q4", dueDate: `January 15, ${selectedYear + 1}`, isPaid: false, income: 0, estimatedTax: 0 },
+    { quarter: "Q1", dueDate: `Apr 20, ${selectedYear}`, isPaid: false, income: 0, estimatedTax: 0 },
+    { quarter: "Q2", dueDate: `Jun 20, ${selectedYear}`, isPaid: false, income: 0, estimatedTax: 0 },
+    { quarter: "Q3", dueDate: `Sep 20, ${selectedYear}`, isPaid: false, income: 0, estimatedTax: 0 },
+    { quarter: "Q4", dueDate: `Dec 20, ${selectedYear}`, isPaid: false, income: 0, estimatedTax: 0 },
   ];
 
   payments.forEach((payment) => {
@@ -148,15 +186,16 @@ export const useTaxData = (selectedYear: number = new Date().getFullYear()) => {
   });
 
   quarterlyData.forEach((q) => {
-    q.estimatedTax = Math.max(0, q.income * 0.25);
+    // Each instalment is 25% of estimated annual tax
+    q.estimatedTax = estimatedTax / 4;
   });
 
   // Mark past quarters as "paid" based on date
   const today = new Date();
   quarterlyData.forEach((q, index) => {
-    const dueDateParts = q.dueDate.split(", ");
-    const dueYear = parseInt(dueDateParts[1]);
-    if (dueYear < today.getFullYear() || (dueYear === today.getFullYear() && index < Math.floor(today.getMonth() / 3))) {
+    const dueMonths = [3, 5, 8, 11]; // April, June, September, December (0-indexed)
+    const dueDate = new Date(selectedYear, dueMonths[index], 20);
+    if (dueDate < today) {
       q.isPaid = true;
     }
   });
@@ -164,21 +203,21 @@ export const useTaxData = (selectedYear: number = new Date().getFullYear()) => {
   // Calculate yearly comparison with real expense data
   const yearlyComparison: YearlyComparison[] = [];
   const currentYear = new Date().getFullYear();
-  
+
   for (let year = currentYear - 2; year <= currentYear; year++) {
     const yearPayments = historicalPayments.filter((p) => {
       const paymentYear = new Date(p.payment_date).getFullYear();
       return paymentYear === year;
     });
-    
+
     const yearExpenses = historicalExpenses.filter((e) => {
       const expenseYear = new Date(e.expense_date).getFullYear();
       return expenseYear === year && e.is_tax_deductible;
     });
-    
+
     const income = yearPayments.reduce((sum, p) => sum + Number(p.amount), 0);
     const expenseTotal = yearExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
-    
+
     yearlyComparison.push({
       year,
       income,
@@ -209,5 +248,6 @@ export const useTaxData = (selectedYear: number = new Date().getFullYear()) => {
     yearlyComparison,
     expenseCategories,
     isLoading: paymentsLoading || expensesLoading,
+    calculateKRATax,
   };
 };

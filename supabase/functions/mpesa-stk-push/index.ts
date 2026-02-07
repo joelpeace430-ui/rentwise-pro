@@ -70,20 +70,32 @@ serve(async (req) => {
 
     // Get access token from Safaricom
     const auth = btoa(`${consumerKey}:${consumerSecret}`);
+    console.log('Requesting M-Pesa token with shortcode:', shortcode);
+    console.log('Consumer key length:', consumerKey?.length, 'Secret length:', consumerSecret?.length);
+    
     const tokenResponse = await fetch(
       'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
       {
+        method: 'GET',
         headers: {
           'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/json',
         },
       }
     );
 
+    console.log('Token response status:', tokenResponse.status, tokenResponse.statusText);
+
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error('Token error:', errorText);
+      console.error('Token error status:', tokenResponse.status);
+      console.error('Token error body:', errorText);
+      console.error('Token error headers:', JSON.stringify(Object.fromEntries(tokenResponse.headers.entries())));
       return new Response(
-        JSON.stringify({ error: 'Failed to authenticate with M-Pesa' }),
+        JSON.stringify({ 
+          error: 'Failed to authenticate with M-Pesa', 
+          details: `Status: ${tokenResponse.status}, Response: ${errorText}` 
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

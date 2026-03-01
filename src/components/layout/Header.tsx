@@ -1,4 +1,5 @@
-import { Bell, Search, Plus } from "lucide-react";
+import { Search, Plus } from "lucide-react";
+import NotificationCenter from "@/components/notifications/NotificationCenter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -52,12 +53,7 @@ const Header = ({ title, subtitle }: HeaderProps) => {
         </DropdownMenu>
 
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5 text-muted-foreground" />
-          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center">
-            3
-          </span>
-        </Button>
+        <NotificationCenter />
 
         {/* User menu */}
         <DropdownMenu>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -271,6 +272,28 @@ const Auth = () => {
                       "Sign In"
                     )}
                   </Button>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      className="text-sm text-primary hover:underline"
+                      onClick={async () => {
+                        if (!loginEmail) {
+                          toast({ title: "Enter your email", description: "Please enter your email first, then click Forgot Password.", variant: "destructive" });
+                          return;
+                        }
+                        const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
+                          redirectTo: `${window.location.origin}/reset-password`,
+                        });
+                        if (error) {
+                          toast({ title: "Error", description: error.message, variant: "destructive" });
+                        } else {
+                          toast({ title: "Check your email", description: "A password reset link has been sent to your email." });
+                        }
+                      }}
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
                   <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center">
                       <span className="w-full border-t" />

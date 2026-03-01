@@ -11,6 +11,8 @@ import {
   Receipt,
   Settings,
   LogOut,
+  Wallet,
+  Wrench,
 } from "lucide-react";
 
 const navigation = [
@@ -19,6 +21,8 @@ const navigation = [
   { name: "Tenants", href: "/tenants", icon: Users },
   { name: "Invoices", href: "/invoices", icon: FileText },
   { name: "Payments", href: "/payments", icon: CreditCard },
+  { name: "Expenses", href: "/expenses", icon: Wallet },
+  { name: "Maintenance", href: "/maintenance", icon: Wrench },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Tax Center", href: "/tax", icon: Receipt },
 ];

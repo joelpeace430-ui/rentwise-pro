@@ -193,6 +193,69 @@ export type Database = {
           },
         ]
       }
+      maintenance_requests: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          image_urls: string[] | null
+          priority: string
+          property_id: string
+          resolved_at: string | null
+          status: string
+          tenant_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          id?: string
+          image_urls?: string[] | null
+          priority?: string
+          property_id: string
+          resolved_at?: string | null
+          status?: string
+          tenant_id: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          image_urls?: string[] | null
+          priority?: string
+          property_id?: string
+          resolved_at?: string | null
+          status?: string
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -233,6 +296,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          link: string | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {

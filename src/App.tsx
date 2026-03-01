@@ -8,10 +8,13 @@ import { TenantAuthProvider } from "@/contexts/TenantAuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Properties from "./pages/Properties";
 import Tenants from "./pages/Tenants";
 import Invoices from "./pages/Invoices";
 import Payments from "./pages/Payments";
+import Expenses from "./pages/Expenses";
+import Maintenance from "./pages/Maintenance";
 import Reports from "./pages/Reports";
 import TaxCenter from "./pages/TaxCenter";
 import Settings from "./pages/Settings";
@@ -53,6 +56,7 @@ const App = () => (
               <AuthProvider>
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route
                     path="/"
                     element={
@@ -90,6 +94,22 @@ const App = () => (
                     element={
                       <ProtectedRoute>
                         <Payments />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/expenses"
+                    element={
+                      <ProtectedRoute>
+                        <Expenses />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/maintenance"
+                    element={
+                      <ProtectedRoute>
+                        <Maintenance />
                       </ProtectedRoute>
                     }
                   />

@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Building2, FileText, CreditCard, LogOut, LayoutDashboard, MessageSquare, FolderOpen, DollarSign, Calendar } from "lucide-react";
+import { Building2, FileText, CreditCard, LogOut, LayoutDashboard, MessageSquare, FolderOpen, DollarSign, Calendar, Wrench } from "lucide-react";
 import { format } from "date-fns";
 import PortalDashboard from "@/components/tenant-portal/PortalDashboard";
 import PortalMessages from "@/components/tenant-portal/PortalMessages";
 import PortalDocuments from "@/components/tenant-portal/PortalDocuments";
+import PortalMaintenance from "@/components/tenant-portal/PortalMaintenance";
 import { TenantChatbot } from "@/components/ai/TenantChatbot";
 
 interface Invoice {
@@ -147,7 +148,7 @@ const TenantPortal = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-flex">
             <TabsTrigger value="dashboard" className="gap-2">
               <LayoutDashboard className="h-4 w-4" />
               <span className="hidden sm:inline">Dashboard</span>
@@ -159,6 +160,10 @@ const TenantPortal = () => {
             <TabsTrigger value="payments" className="gap-2">
               <CreditCard className="h-4 w-4" />
               <span className="hidden sm:inline">Payments</span>
+            </TabsTrigger>
+            <TabsTrigger value="maintenance" className="gap-2">
+              <Wrench className="h-4 w-4" />
+              <span className="hidden sm:inline">Maintenance</span>
             </TabsTrigger>
             <TabsTrigger value="messages" className="gap-2 relative">
               <MessageSquare className="h-4 w-4" />
@@ -334,6 +339,10 @@ const TenantPortal = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="maintenance">
+            <PortalMaintenance tenantId={tenant.id} propertyId={tenant.property_id || ""} />
           </TabsContent>
 
           <TabsContent value="messages">

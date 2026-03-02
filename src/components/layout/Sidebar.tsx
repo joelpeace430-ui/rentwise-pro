@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { useToast } from "@/hooks/use-toast";
 import {
   LayoutDashboard,
@@ -15,22 +16,33 @@ import {
   Wrench,
 } from "lucide-react";
 
-const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Properties", href: "/properties", icon: Building2 },
-  { name: "Tenants", href: "/tenants", icon: Users },
-  { name: "Invoices", href: "/invoices", icon: FileText },
-  { name: "Payments", href: "/payments", icon: CreditCard },
-  { name: "Expenses", href: "/expenses", icon: Wallet },
-  { name: "Maintenance", href: "/maintenance", icon: Wrench },
-  { name: "Reports", href: "/reports", icon: BarChart3 },
-  { name: "Tax Center", href: "/tax", icon: Receipt },
-];
-
 const Sidebar = () => {
   const location = useLocation();
   const { signOut, user } = useAuth();
   const { toast } = useToast();
+  const {
+    isAdmin,
+    canManageProperties,
+    canManageTenants,
+    canViewFinancials,
+    canViewMaintenance,
+    canViewReports,
+    canViewTax,
+  } = useUserRoles();
+
+  const allNavigation = [
+    { name: "Dashboard", href: "/", icon: LayoutDashboard, show: true },
+    { name: "Properties", href: "/properties", icon: Building2, show: canManageProperties() },
+    { name: "Tenants", href: "/tenants", icon: Users, show: canManageTenants() },
+    { name: "Invoices", href: "/invoices", icon: FileText, show: canViewFinancials() },
+    { name: "Payments", href: "/payments", icon: CreditCard, show: canViewFinancials() },
+    { name: "Expenses", href: "/expenses", icon: Wallet, show: canViewFinancials() },
+    { name: "Maintenance", href: "/maintenance", icon: Wrench, show: canViewMaintenance() },
+    { name: "Reports", href: "/reports", icon: BarChart3, show: canViewReports() },
+    { name: "Tax Center", href: "/tax", icon: Receipt, show: canViewTax() },
+  ];
+
+  const navigation = allNavigation.filter((item) => item.show);
 
   const handleSignOut = async () => {
     await signOut();
@@ -40,7 +52,6 @@ const Sidebar = () => {
     });
   };
 
-  // Get user initials
   const getInitials = () => {
     if (!user?.email) return "U";
     return user.email.charAt(0).toUpperCase();
@@ -78,7 +89,6 @@ const Sidebar = () => {
 
         {/* Bottom section */}
         <div className="border-t border-sidebar-border p-3 space-y-1">
-          {/* User info */}
           <div className="flex items-center gap-3 px-4 py-3 mb-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-sm font-medium">
               {getInitials()}
@@ -89,11 +99,13 @@ const Sidebar = () => {
               </p>
             </div>
           </div>
-          
-          <Link to="/settings" className="nav-item">
-            <Settings className="h-5 w-5" />
-            <span>Settings</span>
-          </Link>
+
+          {isAdmin() && (
+            <Link to="/settings" className="nav-item">
+              <Settings className="h-5 w-5" />
+              <span>Settings</span>
+            </Link>
+          )}
           <button
             onClick={handleSignOut}
             className="nav-item w-full text-left"

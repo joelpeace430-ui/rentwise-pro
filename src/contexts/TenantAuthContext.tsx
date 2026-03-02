@@ -9,6 +9,7 @@ interface TenantData {
   email: string;
   unit_number: string;
   monthly_rent: number;
+  property_id: string;
   lease_start?: string;
   lease_end?: string;
   property?: {
@@ -52,6 +53,7 @@ export const TenantAuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         unit_number,
         monthly_rent,
+        property_id,
         lease_start,
         lease_end,
         properties:property_id (
@@ -63,9 +65,10 @@ export const TenantAuthProvider = ({ children }: { children: ReactNode }) => {
       .maybeSingle();
 
     if (!error && data) {
+      const { properties, ...rest } = data as any;
       setTenant({
-        ...data,
-        property: data.properties as TenantData["property"],
+        ...rest,
+        property: properties as TenantData["property"],
       });
     }
   };

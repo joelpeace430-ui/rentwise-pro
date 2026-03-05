@@ -16,8 +16,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Bell, CreditCard, Shield, Building2, Loader2, Mail, Phone, MapPin, FileText, CheckCircle2 } from "lucide-react";
+import { User, Bell, CreditCard, Shield, Building2, Loader2, Mail, Phone, MapPin, FileText, CheckCircle2, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRoles } from "@/hooks/useUserRoles";
+import UserManagement from "@/components/settings/UserManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -36,6 +38,7 @@ interface Profile {
 const Settings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isAdmin } = useUserRoles();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -169,7 +172,7 @@ const Settings = () => {
       subtitle="Manage your account and preferences"
     >
       <Tabs defaultValue="profile" className="max-w-5xl">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsList className={`grid w-full mb-6 ${isAdmin() ? 'grid-cols-5' : 'grid-cols-4'}`}>
           <TabsTrigger value="profile" className="gap-2">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
@@ -186,6 +189,12 @@ const Settings = () => {
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
+          {isAdmin() && (
+            <TabsTrigger value="users" className="gap-2">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Users</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -563,6 +572,12 @@ const Settings = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isAdmin() && (
+          <TabsContent value="users">
+            <UserManagement />
+          </TabsContent>
+        )}
       </Tabs>
     </DashboardLayout>
   );

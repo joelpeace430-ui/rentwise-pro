@@ -36,15 +36,14 @@ export const useUserRoles = () => {
 
       if (error) {
         console.error("Error fetching roles:", error);
-        // Default to landlord if no roles found
-        setRoles(["landlord"]);
+        setRoles([]);
       } else {
-        const userRoles = data?.map(r => r.role as AppRole) || ["landlord"];
-        setRoles(userRoles.length > 0 ? userRoles : ["landlord"]);
+        const userRoles = data?.map(r => r.role as AppRole) || [];
+        setRoles(userRoles);
       }
     } catch (err) {
       console.error("Error fetching roles:", err);
-      setRoles(["landlord"]);
+      setRoles([]);
     }
     setLoading(false);
   };
@@ -59,6 +58,7 @@ export const useUserRoles = () => {
   const isCaretaker = (): boolean => hasRole("caretaker");
   const isFinance = (): boolean => hasRole("finance");
 
+  // Admin sees everything
   const canManageProperties = (): boolean => {
     return isAdmin() || isLandlord();
   };

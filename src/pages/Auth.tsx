@@ -32,6 +32,7 @@ const Auth = () => {
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Redirect if already logged in

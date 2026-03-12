@@ -105,6 +105,10 @@ const Auth = () => {
       newErrors.signupConfirmPassword = "Passwords do not match";
     }
 
+    if (!selectedRole) {
+      newErrors.selectedRole = "Please select a role";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

@@ -392,7 +392,23 @@ const Auth = () => {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-role">Role</Label>
+                    <Select value={selectedRole} onValueChange={setSelectedRole}>
+                      <SelectTrigger className={errors.selectedRole ? "border-destructive" : ""}>
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="landlord">Landlord</SelectItem>
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="caretaker">Caretaker</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.selectedRole && (
+                      <p className="text-sm text-destructive">{errors.selectedRole}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
                     <Input
                       id="signup-password"
                       type="password"

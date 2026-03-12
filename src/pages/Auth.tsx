@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building2, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { lovable } from "@/integrations/lovable/index";
@@ -31,6 +32,7 @@ const Auth = () => {
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Redirect if already logged in
@@ -103,6 +105,10 @@ const Auth = () => {
       newErrors.signupConfirmPassword = "Passwords do not match";
     }
 
+    if (!selectedRole) {
+      newErrors.selectedRole = "Please select a role";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -142,7 +148,21 @@ const Auth = () => {
     if (!validateSignupForm()) return;
 
     setIsLoading(true);
-    const { error } = await signUp(signupEmail, signupPassword, firstName, lastName);
+    
+    // Pass role in metadata so the trigger auto-assigns it
+    const { error } = await supabase.auth.signUp({
+      email: signupEmail,
+      password: signupPassword,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          role: selectedRole,
+        },
+      },
+    });
+    
     setIsLoading(false);
 
     if (error) {
@@ -372,7 +392,23 @@ const Auth = () => {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-role">Role</Label>
+                    <Select value={selectedRole} onValueChange={setSelectedRole}>
+                      <SelectTrigger className={errors.selectedRole ? "border-destructive" : ""}>
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="landlord">Landlord</SelectItem>
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="caretaker">Caretaker</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.selectedRole && (
+                      <p className="text-sm text-destructive">{errors.selectedRole}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
                     <Input
                       id="signup-password"
                       type="password"

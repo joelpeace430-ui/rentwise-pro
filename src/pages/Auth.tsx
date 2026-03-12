@@ -148,7 +148,21 @@ const Auth = () => {
     if (!validateSignupForm()) return;
 
     setIsLoading(true);
-    const { error } = await signUp(signupEmail, signupPassword, firstName, lastName);
+    
+    // Pass role in metadata so the trigger auto-assigns it
+    const { error } = await supabase.auth.signUp({
+      email: signupEmail,
+      password: signupPassword,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          role: selectedRole,
+        },
+      },
+    });
+    
     setIsLoading(false);
 
     if (error) {

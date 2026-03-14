@@ -356,7 +356,7 @@ const Tenants = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem
+                                <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedTenant(tenant);
                                   setMessagesDialogOpen(true);
@@ -364,6 +364,24 @@ const Tenants = () => {
                               >
                                 <MessageSquare className="mr-2 h-4 w-4" />
                                 Messages
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSmsTenant(tenant);
+                                  setSmsDialogOpen(true);
+                                }}
+                              >
+                                <MessageSquareText className="mr-2 h-4 w-4" />
+                                Send SMS Prompt
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSmsTenant(tenant);
+                                  setSmsHistoryOpen(true);
+                                }}
+                              >
+                                <History className="mr-2 h-4 w-4" />
+                                SMS History
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {

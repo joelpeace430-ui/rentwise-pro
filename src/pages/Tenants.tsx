@@ -37,6 +37,7 @@ import {
   Users,
   Loader2,
   MessageSquare,
+  MessageSquareText,
   FileUp,
   Brain,
   Phone,
@@ -44,6 +45,7 @@ import {
   Clock,
   AlertTriangle,
   UserCheck,
+  History,
 } from "lucide-react";
 import { useTenants, Tenant } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
@@ -51,6 +53,8 @@ import TenantDialog from "@/components/tenants/TenantDialog";
 import InviteTenantButton from "@/components/tenants/InviteTenantButton";
 import TenantMessagesDialog from "@/components/tenants/TenantMessagesDialog";
 import UploadDocumentDialog from "@/components/tenants/UploadDocumentDialog";
+import SMSPromptDialog from "@/components/tenants/SMSPromptDialog";
+import SMSHistorySheet from "@/components/tenants/SMSHistorySheet";
 import { PaymentScoreCard } from "@/components/ai/PaymentScoreCard";
 import { format } from "date-fns";
 import {
@@ -73,6 +77,9 @@ const Tenants = () => {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [scoreSheetOpen, setScoreSheetOpen] = useState(false);
   const [scoringTenant, setScoringTenant] = useState<Tenant | null>(null);
+  const [smsDialogOpen, setSmsDialogOpen] = useState(false);
+  const [smsHistoryOpen, setSmsHistoryOpen] = useState(false);
+  const [smsTenant, setSmsTenant] = useState<Tenant | null>(null);
 
   const filteredTenants = tenants.filter(
     (t) =>
@@ -349,7 +356,7 @@ const Tenants = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem
+                                <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedTenant(tenant);
                                   setMessagesDialogOpen(true);
@@ -357,6 +364,24 @@ const Tenants = () => {
                               >
                                 <MessageSquare className="mr-2 h-4 w-4" />
                                 Messages
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSmsTenant(tenant);
+                                  setSmsDialogOpen(true);
+                                }}
+                              >
+                                <MessageSquareText className="mr-2 h-4 w-4" />
+                                Send SMS Prompt
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSmsTenant(tenant);
+                                  setSmsHistoryOpen(true);
+                                }}
+                              >
+                                <History className="mr-2 h-4 w-4" />
+                                SMS History
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
@@ -465,6 +490,22 @@ const Tenants = () => {
           )}
         </SheetContent>
       </Sheet>
+
+      {smsTenant && (
+        <>
+          <SMSPromptDialog
+            open={smsDialogOpen}
+            onOpenChange={setSmsDialogOpen}
+            tenant={smsTenant}
+          />
+          <SMSHistorySheet
+            open={smsHistoryOpen}
+            onOpenChange={setSmsHistoryOpen}
+            tenantId={smsTenant.id}
+            tenantName={`${smsTenant.first_name} ${smsTenant.last_name}`}
+          />
+        </>
+      )}
     </DashboardLayout>
   );
 };

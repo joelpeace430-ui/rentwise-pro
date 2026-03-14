@@ -75,6 +75,9 @@ const Tenants = () => {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [scoreSheetOpen, setScoreSheetOpen] = useState(false);
   const [scoringTenant, setScoringTenant] = useState<Tenant | null>(null);
+  const [smsDialogOpen, setSmsDialogOpen] = useState(false);
+  const [smsHistoryOpen, setSmsHistoryOpen] = useState(false);
+  const [smsTenant, setSmsTenant] = useState<Tenant | null>(null);
 
   const filteredTenants = tenants.filter(
     (t) =>

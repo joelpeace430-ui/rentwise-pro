@@ -37,6 +37,7 @@ import {
   Users,
   Loader2,
   MessageSquare,
+  MessageSquareText,
   FileUp,
   Brain,
   Phone,
@@ -44,6 +45,7 @@ import {
   Clock,
   AlertTriangle,
   UserCheck,
+  History,
 } from "lucide-react";
 import { useTenants, Tenant } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";

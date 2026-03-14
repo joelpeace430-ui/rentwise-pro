@@ -490,6 +490,22 @@ const Tenants = () => {
           )}
         </SheetContent>
       </Sheet>
+
+      {smsTenant && (
+        <>
+          <SMSPromptDialog
+            open={smsDialogOpen}
+            onOpenChange={setSmsDialogOpen}
+            tenant={smsTenant}
+          />
+          <SMSHistorySheet
+            open={smsHistoryOpen}
+            onOpenChange={setSmsHistoryOpen}
+            tenantId={smsTenant.id}
+            tenantName={`${smsTenant.first_name} ${smsTenant.last_name}`}
+          />
+        </>
+      )}
     </DashboardLayout>
   );
 };

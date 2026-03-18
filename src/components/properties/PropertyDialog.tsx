@@ -66,6 +66,9 @@ const PropertyDialog = ({ open, onOpenChange, property, onSave }: PropertyDialog
       address,
       total_units: parseInt(totalUnits),
       status,
+      penalty_type: penaltyType,
+      penalty_rate: parseFloat(penaltyRate),
+      grace_period_days: parseInt(gracePeriodDays),
     });
 
     setLoading(false);

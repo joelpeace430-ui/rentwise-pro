@@ -17,6 +17,7 @@ import {
   Wallet,
   Wrench,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {

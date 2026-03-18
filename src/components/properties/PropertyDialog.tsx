@@ -43,11 +43,17 @@ const PropertyDialog = ({ open, onOpenChange, property, onSave }: PropertyDialog
       setAddress(property.address);
       setTotalUnits(property.total_units.toString());
       setStatus(property.status);
+      setPenaltyType((property as any).penalty_type || "percentage");
+      setPenaltyRate(((property as any).penalty_rate ?? 5).toString());
+      setGracePeriodDays(((property as any).grace_period_days ?? 7).toString());
     } else {
       setName("");
       setAddress("");
       setTotalUnits("1");
       setStatus("active");
+      setPenaltyType("percentage");
+      setPenaltyRate("5");
+      setGracePeriodDays("7");
     }
   }, [property, open]);
 

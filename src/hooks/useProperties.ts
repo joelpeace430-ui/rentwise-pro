@@ -20,6 +20,9 @@ export interface CreatePropertyInput {
   address: string;
   total_units: number;
   status?: "active" | "maintenance";
+  penalty_type?: string;
+  penalty_rate?: number;
+  grace_period_days?: number;
 }
 
 export const useProperties = () => {

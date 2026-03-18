@@ -135,6 +135,53 @@ const PropertyDialog = ({ open, onOpenChange, property, onSave }: PropertyDialog
                 </Select>
               </div>
             </div>
+
+            {/* Penalty Configuration Section */}
+            <div className="border-t pt-4 mt-2">
+              <p className="text-sm font-medium mb-3">Late Payment Penalty Settings</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="penaltyType">Penalty Type</Label>
+                  <Select value={penaltyType} onValueChange={setPenaltyType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">% of Outstanding</SelectItem>
+                      <SelectItem value="fixed">Fixed Amount (KSH)</SelectItem>
+                      <SelectItem value="daily">% Per Day Late</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="penaltyRate">
+                    {penaltyType === "fixed" ? "Penalty Amount (KSH)" : "Penalty Rate (%)"}
+                  </Label>
+                  <Input
+                    id="penaltyRate"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={penaltyRate}
+                    onChange={(e) => setPenaltyRate(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2 mt-3">
+                <Label htmlFor="gracePeriod">Grace Period (Days)</Label>
+                <Input
+                  id="gracePeriod"
+                  type="number"
+                  min="0"
+                  max="30"
+                  value={gracePeriodDays}
+                  onChange={(e) => setGracePeriodDays(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Number of days after the due date before penalty is applied
+                </p>
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

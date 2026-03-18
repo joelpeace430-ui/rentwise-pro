@@ -33,6 +33,9 @@ const PropertyDialog = ({ open, onOpenChange, property, onSave }: PropertyDialog
   const [address, setAddress] = useState("");
   const [totalUnits, setTotalUnits] = useState("1");
   const [status, setStatus] = useState<"active" | "maintenance">("active");
+  const [penaltyType, setPenaltyType] = useState("percentage");
+  const [penaltyRate, setPenaltyRate] = useState("5");
+  const [gracePeriodDays, setGracePeriodDays] = useState("7");
 
   useEffect(() => {
     if (property) {

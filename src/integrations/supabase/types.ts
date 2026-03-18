@@ -477,8 +477,11 @@ export type Database = {
         Row: {
           address: string
           created_at: string
+          grace_period_days: number
           id: string
           name: string
+          penalty_rate: number
+          penalty_type: string
           status: string
           total_units: number
           updated_at: string
@@ -487,8 +490,11 @@ export type Database = {
         Insert: {
           address: string
           created_at?: string
+          grace_period_days?: number
           id?: string
           name: string
+          penalty_rate?: number
+          penalty_type?: string
           status?: string
           total_units?: number
           updated_at?: string
@@ -497,8 +503,11 @@ export type Database = {
         Update: {
           address?: string
           created_at?: string
+          grace_period_days?: number
           id?: string
           name?: string
+          penalty_rate?: number
+          penalty_type?: string
           status?: string
           total_units?: number
           updated_at?: string
@@ -606,6 +615,81 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "sms_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_debts: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          due_date: string
+          grace_period_days: number
+          id: string
+          month_year: string
+          notes: string | null
+          penalty_amount: number
+          penalty_applied_at: string | null
+          penalty_rate: number
+          property_id: string
+          rent_amount: number
+          status: string
+          tenant_id: string
+          total_owed: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid?: number
+          created_at?: string
+          due_date: string
+          grace_period_days?: number
+          id?: string
+          month_year: string
+          notes?: string | null
+          penalty_amount?: number
+          penalty_applied_at?: string | null
+          penalty_rate?: number
+          property_id: string
+          rent_amount: number
+          status?: string
+          tenant_id: string
+          total_owed?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          due_date?: string
+          grace_period_days?: number
+          id?: string
+          month_year?: string
+          notes?: string | null
+          penalty_amount?: number
+          penalty_applied_at?: string | null
+          penalty_rate?: number
+          property_id?: string
+          rent_amount?: number
+          status?: string
+          tenant_id?: string
+          total_owed?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_debts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_debts_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

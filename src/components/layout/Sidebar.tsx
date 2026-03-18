@@ -17,6 +17,7 @@ import {
   Wallet,
   Wrench,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -49,6 +50,7 @@ const Sidebar = () => {
     { name: "Tenants", href: "/tenants", icon: Users, show: canManageTenants() },
     { name: "Invoices", href: "/invoices", icon: FileText, show: canViewFinancials() },
     { name: "Payments", href: "/payments", icon: CreditCard, show: canViewFinancials() },
+    { name: "Debts", href: "/debts", icon: AlertTriangle, show: canViewFinancials() },
     { name: "Expenses", href: "/expenses", icon: Wallet, show: canViewFinancials() },
     { name: "Maintenance", href: "/maintenance", icon: Wrench, show: canViewMaintenance() },
     { name: "Reports", href: "/reports", icon: BarChart3, show: canViewReports() },

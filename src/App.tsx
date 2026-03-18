@@ -13,6 +13,7 @@ import Properties from "./pages/Properties";
 import Tenants from "./pages/Tenants";
 import Invoices from "./pages/Invoices";
 import Payments from "./pages/Payments";
+import Debts from "./pages/Debts";
 import Expenses from "./pages/Expenses";
 import Maintenance from "./pages/Maintenance";
 import Reports from "./pages/Reports";

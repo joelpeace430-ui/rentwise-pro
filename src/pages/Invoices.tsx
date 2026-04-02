@@ -264,6 +264,15 @@ const Invoices = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {invoice.status !== "paid" && (
+                              <DropdownMenuItem
+                                onClick={() => handleMarkAsPaid(invoice)}
+                                disabled={markingPaid === invoice.id}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                {markingPaid === invoice.id ? "Processing..." : "Mark as Paid"}
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={() => handleEdit(invoice)}>
                               Edit Invoice
                             </DropdownMenuItem>

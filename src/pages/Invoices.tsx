@@ -34,11 +34,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, MoreHorizontal, FileText, Loader2 } from "lucide-react";
+import { Plus, Search, MoreHorizontal, FileText, Loader2, CheckCircle } from "lucide-react";
 import { useInvoices, Invoice } from "@/hooks/useInvoices";
 import { useTenants } from "@/hooks/useTenants";
+import { usePayments } from "@/hooks/usePayments";
 import InvoiceDialog from "@/components/invoices/InvoiceDialog";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 const Invoices = () => {
   const { invoices, loading, createInvoice, updateInvoice, deleteInvoice } = useInvoices();

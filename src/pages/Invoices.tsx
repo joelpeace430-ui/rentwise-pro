@@ -43,8 +43,11 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 const Invoices = () => {
-  const { invoices, loading, createInvoice, updateInvoice, deleteInvoice } = useInvoices();
+  const { invoices, loading, createInvoice, updateInvoice, deleteInvoice, fetchInvoices } = useInvoices();
   const { tenants } = useTenants();
+  const { createPayment } = usePayments();
+  const { toast } = useToast();
+  const [markingPaid, setMarkingPaid] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);

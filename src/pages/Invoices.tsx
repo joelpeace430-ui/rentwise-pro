@@ -34,15 +34,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Search, MoreHorizontal, FileText, Loader2 } from "lucide-react";
+import { Plus, Search, MoreHorizontal, FileText, Loader2, CheckCircle } from "lucide-react";
 import { useInvoices, Invoice } from "@/hooks/useInvoices";
 import { useTenants } from "@/hooks/useTenants";
+import { usePayments } from "@/hooks/usePayments";
 import InvoiceDialog from "@/components/invoices/InvoiceDialog";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 const Invoices = () => {
-  const { invoices, loading, createInvoice, updateInvoice, deleteInvoice } = useInvoices();
+  const { invoices, loading, createInvoice, updateInvoice, deleteInvoice, fetchInvoices } = useInvoices();
   const { tenants } = useTenants();
+  const { createPayment } = usePayments();
+  const { toast } = useToast();
+  const [markingPaid, setMarkingPaid] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -81,6 +86,30 @@ const Invoices = () => {
       return updateInvoice(editingInvoice.id, data);
     }
     return createInvoice(data);
+  };
+
+  const handleMarkAsPaid = async (invoice: Invoice) => {
+    setMarkingPaid(invoice.id);
+    try {
+      const result = await createPayment({
+        tenant_id: invoice.tenant_id,
+        invoice_id: invoice.id,
+        amount: invoice.amount,
+        payment_method: "bank_transfer",
+        payment_date: new Date().toISOString().split("T")[0],
+        status: "completed",
+        notes: `Auto-recorded payment for invoice ${invoice.invoice_number}`,
+      });
+      if (!result?.error) {
+        await fetchInvoices();
+        toast({
+          title: "Invoice Marked as Paid",
+          description: `Invoice ${invoice.invoice_number} has been marked as paid and a payment record was created automatically.`,
+        });
+      }
+    } finally {
+      setMarkingPaid(null);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -235,6 +264,15 @@ const Invoices = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {invoice.status !== "paid" && (
+                              <DropdownMenuItem
+                                onClick={() => handleMarkAsPaid(invoice)}
+                                disabled={markingPaid === invoice.id}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                {markingPaid === invoice.id ? "Processing..." : "Mark as Paid"}
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={() => handleEdit(invoice)}>
                               Edit Invoice
                             </DropdownMenuItem>

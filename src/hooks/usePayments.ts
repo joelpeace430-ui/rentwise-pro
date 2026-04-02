@@ -74,10 +74,28 @@ export const usePayments = () => {
   const createPayment = async (input: CreatePaymentInput) => {
     if (!user) return { error: new Error("Not authenticated") };
 
+    // Auto-match to an unpaid invoice if no invoice_id provided
+    let invoiceId = input.invoice_id;
+    if (!invoiceId && input.status === "completed") {
+      const { data: matchingInvoice } = await supabase
+        .from("invoices")
+        .select("id")
+        .eq("tenant_id", input.tenant_id)
+        .in("status", ["pending", "overdue"])
+        .order("due_date", { ascending: true })
+        .limit(1)
+        .single();
+
+      if (matchingInvoice) {
+        invoiceId = matchingInvoice.id;
+      }
+    }
+
     const { data, error } = await supabase
       .from("payments")
       .insert({
         ...input,
+        invoice_id: invoiceId || input.invoice_id,
         user_id: user.id,
       })
       .select()
@@ -93,11 +111,18 @@ export const usePayments = () => {
     }
 
     // If payment is completed and linked to an invoice, update invoice status
-    if (input.status === "completed" && input.invoice_id) {
+    const linkedInvoiceId = invoiceId || input.invoice_id;
+    if (input.status === "completed" && linkedInvoiceId) {
       await supabase
         .from("invoices")
         .update({ status: "paid" })
-        .eq("id", input.invoice_id);
+        .eq("id", linkedInvoiceId);
+
+      // Update tenant rent_status to paid
+      await supabase
+        .from("tenants")
+        .update({ rent_status: "paid" })
+        .eq("id", input.tenant_id);
     }
 
     // Auto-generate receipt for completed payments
@@ -108,7 +133,6 @@ export const usePayments = () => {
         });
       } catch (receiptError) {
         console.error("Failed to generate receipt:", receiptError);
-        // Don't fail the payment if receipt generation fails
       }
     }
 

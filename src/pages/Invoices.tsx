@@ -88,6 +88,30 @@ const Invoices = () => {
     return createInvoice(data);
   };
 
+  const handleMarkAsPaid = async (invoice: Invoice) => {
+    setMarkingPaid(invoice.id);
+    try {
+      const result = await createPayment({
+        tenant_id: invoice.tenant_id,
+        invoice_id: invoice.id,
+        amount: invoice.amount,
+        payment_method: "bank_transfer",
+        payment_date: new Date().toISOString().split("T")[0],
+        status: "completed",
+        notes: `Auto-recorded payment for invoice ${invoice.invoice_number}`,
+      });
+      if (!result?.error) {
+        await fetchInvoices();
+        toast({
+          title: "Invoice Marked as Paid",
+          description: `Invoice ${invoice.invoice_number} has been marked as paid and a payment record was created automatically.`,
+        });
+      }
+    } finally {
+      setMarkingPaid(null);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-KE", {
       style: "currency",

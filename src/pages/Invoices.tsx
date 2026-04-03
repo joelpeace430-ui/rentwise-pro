@@ -39,6 +39,7 @@ import { useInvoices, Invoice } from "@/hooks/useInvoices";
 import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import InvoiceDialog from "@/components/invoices/InvoiceDialog";
+import AIInvoiceAssistant from "@/components/invoices/AIInvoiceAssistant";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
@@ -150,7 +151,9 @@ const Invoices = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button
+          <div className="flex gap-2">
+            <AIInvoiceAssistant onInvoicesCreated={fetchInvoices} />
+            <Button
             className="gap-2"
             onClick={() => {
               setEditingInvoice(null);
@@ -158,9 +161,10 @@ const Invoices = () => {
             }}
             disabled={tenants.length === 0}
           >
-            <Plus className="h-4 w-4" />
-            Create Invoice
-          </Button>
+              <Plus className="h-4 w-4" />
+              Create Invoice
+            </Button>
+          </div>
         </div>
 
         {tenants.length === 0 && (

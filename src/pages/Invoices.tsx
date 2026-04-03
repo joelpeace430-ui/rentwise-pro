@@ -297,6 +297,9 @@ const Invoices = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Automation Settings */}
+        <InvoiceScheduleSettings />
       </div>
 
       <InvoiceDialog

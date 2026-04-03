@@ -161,9 +161,10 @@ const Invoices = () => {
             }}
             disabled={tenants.length === 0}
           >
-            <Plus className="h-4 w-4" />
-            Create Invoice
-          </Button>
+              <Plus className="h-4 w-4" />
+              Create Invoice
+            </Button>
+          </div>
         </div>
 
         {tenants.length === 0 && (

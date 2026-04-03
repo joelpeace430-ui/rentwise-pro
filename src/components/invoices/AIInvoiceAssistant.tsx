@@ -227,7 +227,6 @@ const AIInvoiceAssistant = ({ onInvoicesCreated }: { onInvoicesCreated?: () => v
                     className="text-xs"
                     onClick={() => {
                       setInput(qa.prompt);
-                      setTimeout(() => sendMessage(), 0);
                     }}
                   >
                     {qa.label}

@@ -143,6 +143,51 @@ export type Database = {
           },
         ]
       }
+      invoice_schedules: {
+        Row: {
+          auto_generate_invoices: boolean
+          auto_send_reminders: boolean
+          created_at: string
+          id: string
+          invoice_day: number
+          is_active: boolean
+          last_invoice_generated_at: string | null
+          last_reminder_sent_at: string | null
+          reminder_days: number[]
+          reminder_message_template: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_generate_invoices?: boolean
+          auto_send_reminders?: boolean
+          created_at?: string
+          id?: string
+          invoice_day?: number
+          is_active?: boolean
+          last_invoice_generated_at?: string | null
+          last_reminder_sent_at?: string | null
+          reminder_days?: number[]
+          reminder_message_template?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_generate_invoices?: boolean
+          auto_send_reminders?: boolean
+          created_at?: string
+          id?: string
+          invoice_day?: number
+          is_active?: boolean
+          last_invoice_generated_at?: string | null
+          last_reminder_sent_at?: string | null
+          reminder_days?: number[]
+          reminder_message_template?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number

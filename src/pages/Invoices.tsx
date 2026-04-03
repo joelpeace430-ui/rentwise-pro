@@ -40,6 +40,7 @@ import { useTenants } from "@/hooks/useTenants";
 import { usePayments } from "@/hooks/usePayments";
 import InvoiceDialog from "@/components/invoices/InvoiceDialog";
 import AIInvoiceAssistant from "@/components/invoices/AIInvoiceAssistant";
+import InvoiceScheduleSettings from "@/components/invoices/InvoiceScheduleSettings";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 

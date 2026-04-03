@@ -151,7 +151,9 @@ const Invoices = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button
+          <div className="flex gap-2">
+            <AIInvoiceAssistant onInvoicesCreated={fetchInvoices} />
+            <Button
             className="gap-2"
             onClick={() => {
               setEditingInvoice(null);

@@ -55,6 +55,7 @@ import TenantMessagesDialog from "@/components/tenants/TenantMessagesDialog";
 import UploadDocumentDialog from "@/components/tenants/UploadDocumentDialog";
 import SMSPromptDialog from "@/components/tenants/SMSPromptDialog";
 import SMSHistorySheet from "@/components/tenants/SMSHistorySheet";
+import TenantProfileSheet from "@/components/tenants/TenantProfileSheet";
 import { PaymentScoreCard } from "@/components/ai/PaymentScoreCard";
 import { format } from "date-fns";
 import {
@@ -80,6 +81,8 @@ const Tenants = () => {
   const [smsDialogOpen, setSmsDialogOpen] = useState(false);
   const [smsHistoryOpen, setSmsHistoryOpen] = useState(false);
   const [smsTenant, setSmsTenant] = useState<Tenant | null>(null);
+  const [profileSheetOpen, setProfileSheetOpen] = useState(false);
+  const [profileTenant, setProfileTenant] = useState<Tenant | null>(null);
 
   const filteredTenants = tenants.filter(
     (t) =>
@@ -276,7 +279,14 @@ const Tenants = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredTenants.map((tenant) => (
-                    <TableRow key={tenant.id} className="table-row-hover group">
+                    <TableRow
+                      key={tenant.id}
+                      className="table-row-hover group cursor-pointer"
+                      onClick={() => {
+                        setProfileTenant(tenant);
+                        setProfileSheetOpen(true);
+                      }}
+                    >
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10 ring-2 ring-background shadow-sm">
@@ -342,7 +352,7 @@ const Tenants = () => {
                             : "Overdue"}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
                           <InviteTenantButton
                             tenantId={tenant.id}
@@ -490,6 +500,22 @@ const Tenants = () => {
           )}
         </SheetContent>
       </Sheet>
+
+      <TenantProfileSheet
+        open={profileSheetOpen}
+        onOpenChange={setProfileSheetOpen}
+        tenant={profileTenant}
+        onSendMessage={(t) => {
+          setProfileSheetOpen(false);
+          setSelectedTenant(t);
+          setMessagesDialogOpen(true);
+        }}
+        onGenerateInvoice={(t) => {
+          setProfileSheetOpen(false);
+          // Navigate to invoices or open invoice dialog
+          window.location.href = "/invoices";
+        }}
+      />
 
       {smsTenant && (
         <>

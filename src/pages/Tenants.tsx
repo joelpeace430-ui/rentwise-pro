@@ -46,6 +46,7 @@ import {
   AlertTriangle,
   UserCheck,
   History,
+  Eye,
 } from "lucide-react";
 import { useTenants, Tenant } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";

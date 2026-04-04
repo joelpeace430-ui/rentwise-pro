@@ -355,6 +355,18 @@ const Tenants = () => {
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5 text-xs"
+                            onClick={() => {
+                              setProfileTenant(tenant);
+                              setProfileSheetOpen(true);
+                            }}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            View
+                          </Button>
                           <InviteTenantButton
                             tenantId={tenant.id}
                             tenantEmail={tenant.email}

@@ -279,7 +279,14 @@ const Tenants = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredTenants.map((tenant) => (
-                    <TableRow key={tenant.id} className="table-row-hover group">
+                    <TableRow
+                      key={tenant.id}
+                      className="table-row-hover group cursor-pointer"
+                      onClick={() => {
+                        setProfileTenant(tenant);
+                        setProfileSheetOpen(true);
+                      }}
+                    >
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10 ring-2 ring-background shadow-sm">

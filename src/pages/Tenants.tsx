@@ -501,6 +501,22 @@ const Tenants = () => {
         </SheetContent>
       </Sheet>
 
+      <TenantProfileSheet
+        open={profileSheetOpen}
+        onOpenChange={setProfileSheetOpen}
+        tenant={profileTenant}
+        onSendMessage={(t) => {
+          setProfileSheetOpen(false);
+          setSelectedTenant(t);
+          setMessagesDialogOpen(true);
+        }}
+        onGenerateInvoice={(t) => {
+          setProfileSheetOpen(false);
+          // Navigate to invoices or open invoice dialog
+          window.location.href = "/invoices";
+        }}
+      />
+
       {smsTenant && (
         <>
           <SMSPromptDialog

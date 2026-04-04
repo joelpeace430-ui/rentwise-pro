@@ -81,6 +81,8 @@ const Tenants = () => {
   const [smsDialogOpen, setSmsDialogOpen] = useState(false);
   const [smsHistoryOpen, setSmsHistoryOpen] = useState(false);
   const [smsTenant, setSmsTenant] = useState<Tenant | null>(null);
+  const [profileSheetOpen, setProfileSheetOpen] = useState(false);
+  const [profileTenant, setProfileTenant] = useState<Tenant | null>(null);
 
   const filteredTenants = tenants.filter(
     (t) =>

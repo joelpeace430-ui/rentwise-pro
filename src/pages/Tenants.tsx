@@ -55,6 +55,7 @@ import TenantMessagesDialog from "@/components/tenants/TenantMessagesDialog";
 import UploadDocumentDialog from "@/components/tenants/UploadDocumentDialog";
 import SMSPromptDialog from "@/components/tenants/SMSPromptDialog";
 import SMSHistorySheet from "@/components/tenants/SMSHistorySheet";
+import TenantProfileSheet from "@/components/tenants/TenantProfileSheet";
 import { PaymentScoreCard } from "@/components/ai/PaymentScoreCard";
 import { format } from "date-fns";
 import {

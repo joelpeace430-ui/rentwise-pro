@@ -14,7 +14,7 @@ const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) =>
       <Sidebar />
       <div className="pl-64">
         <Header title={title} subtitle={subtitle} />
-        <main className="p-6">{children}</main>
+        <main className="p-6 max-w-[1600px] mx-auto">{children}</main>
       </div>
     </div>
   );

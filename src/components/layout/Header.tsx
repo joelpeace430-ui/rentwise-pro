@@ -53,6 +53,9 @@ const Header = ({ title, subtitle }: HeaderProps) => {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
         {/* Notifications */}
         <NotificationCenter />
 

@@ -171,7 +171,7 @@ const MpesaPaymentDialog = ({
                     <SelectValue placeholder="Select invoice" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No invoice</SelectItem>
+                    <SelectItem value="none">No invoice</SelectItem>
                     {tenantInvoices.map((inv) => (
                       <SelectItem key={inv.id} value={inv.id}>
                         {inv.invoice_number} - KES {inv.amount.toLocaleString()}

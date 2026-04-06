@@ -81,7 +81,7 @@ const PaymentDialog = ({ open, onOpenChange, payment, tenants, invoices, onSave 
 
     const result = await onSave({
       tenant_id: tenantId,
-      invoice_id: invoiceId || undefined,
+      invoice_id: invoiceId && invoiceId !== "none" ? invoiceId : undefined,
       amount: parseFloat(amount),
       payment_method: paymentMethod,
       payment_date: paymentDate,
@@ -140,7 +140,7 @@ const PaymentDialog = ({ open, onOpenChange, payment, tenants, invoices, onSave 
                     <SelectValue placeholder="Select invoice" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No invoice</SelectItem>
+                    <SelectItem value="none">No invoice</SelectItem>
                     {tenantInvoices.map((inv) => (
                       <SelectItem key={inv.id} value={inv.id}>
                         {inv.invoice_number} - ${inv.amount}

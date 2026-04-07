@@ -47,7 +47,15 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     canViewTax,
   } = useUserRoles();
 
-  const allNavigation = [
+  const agentNavigation = [
+    { name: "Dashboard", href: "/agent/dashboard", icon: LayoutDashboard, show: true },
+    { name: "Properties", href: "/agent/properties", icon: Building2, show: true },
+    { name: "Tenants", href: "/agent/tenants", icon: Users, show: true },
+    { name: "Payments", href: "/agent/payments", icon: CreditCard, show: true },
+    { name: "Maintenance", href: "/maintenance", icon: Wrench, show: true },
+  ];
+
+  const landlordNavigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard, show: true },
     { name: "Properties", href: "/properties", icon: Building2, show: canManageProperties() },
     { name: "Tenants", href: "/tenants", icon: Users, show: canManageTenants() },
@@ -59,6 +67,10 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Reports", href: "/reports", icon: BarChart3, show: canViewReports() },
     { name: "Tax Center", href: "/tax", icon: Receipt, show: canViewTax() },
   ];
+
+  // Use agent nav if user is agent-only (not admin/landlord)
+  const isAgentOnly = isAgent() && !isAdmin() && !isLandlord();
+  const allNavigation = isAgentOnly ? agentNavigation : landlordNavigation;
 
   const navigation = allNavigation.filter((item) => item.show);
 

@@ -22,6 +22,10 @@ import TaxCenter from "./pages/TaxCenter";
 import Settings from "./pages/Settings";
 import TenantLogin from "./pages/TenantLogin";
 import TenantPortal from "./pages/TenantPortal";
+import AgentDashboard from "./pages/AgentDashboard";
+import AgentProperties from "./pages/AgentProperties";
+import AgentTenants from "./pages/AgentTenants";
+import AgentPayments from "./pages/AgentPayments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

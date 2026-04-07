@@ -18,6 +18,13 @@ import {
 
 const Index = () => {
   const { stats, loading } = useDashboardStats();
+  const { isAgent, isAdmin, isLandlord, loading: rolesLoading } = useUserRoles();
+
+  // Redirect agent-only users to agent dashboard
+  const isAgentOnly = isAgent() && !isAdmin() && !isLandlord();
+  if (!rolesLoading && isAgentOnly) {
+    return <Navigate to="/agent/dashboard" replace />;
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-KE", {

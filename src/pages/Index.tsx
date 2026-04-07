@@ -1,9 +1,11 @@
+import { Navigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StatCard from "@/components/dashboard/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DollarSign, Building2, Users, FileText, Calendar, AlertCircle, Loader2 } from "lucide-react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { format } from "date-fns";
 import {
   PieChart,

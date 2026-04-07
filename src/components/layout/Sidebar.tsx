@@ -39,6 +39,8 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     roles,
     loading,
     isAdmin,
+    isAgent,
+    isLandlord,
     canManageProperties,
     canManageTenants,
     canViewFinancials,

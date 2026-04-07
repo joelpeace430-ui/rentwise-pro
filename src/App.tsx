@@ -22,6 +22,10 @@ import TaxCenter from "./pages/TaxCenter";
 import Settings from "./pages/Settings";
 import TenantLogin from "./pages/TenantLogin";
 import TenantPortal from "./pages/TenantPortal";
+import AgentDashboard from "./pages/AgentDashboard";
+import AgentProperties from "./pages/AgentProperties";
+import AgentTenants from "./pages/AgentTenants";
+import AgentPayments from "./pages/AgentPayments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +64,22 @@ const App = () => (
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route
+                    path="/agent/dashboard"
+                    element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/agent/properties"
+                    element={<ProtectedRoute><AgentProperties /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/agent/tenants"
+                    element={<ProtectedRoute><AgentTenants /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/agent/payments"
+                    element={<ProtectedRoute><AgentPayments /></ProtectedRoute>}
+                  />
                   <Route
                     path="/"
                     element={

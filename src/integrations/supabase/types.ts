@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_commissions: {
+        Row: {
+          agent_user_id: string
+          commission_rate: number
+          commission_type: string
+          created_at: string
+          id: string
+          landlord_user_id: string
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          agent_user_id: string
+          commission_rate?: number
+          commission_type?: string
+          created_at?: string
+          id?: string
+          landlord_user_id: string
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          agent_user_id?: string
+          commission_rate?: number
+          commission_type?: string
+          created_at?: string
+          id?: string
+          landlord_user_id?: string
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_commissions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_chat_history: {
         Row: {
           content: string
@@ -918,6 +959,69 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      utility_bills: {
+        Row: {
+          billing_period: string
+          created_at: string
+          id: string
+          notes: string | null
+          property_id: string
+          status: string
+          tenant_id: string
+          total_amount: number
+          unit_cost: number | null
+          updated_at: string
+          usage_amount: number | null
+          user_id: string
+          utility_type: string
+        }
+        Insert: {
+          billing_period: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          property_id: string
+          status?: string
+          tenant_id: string
+          total_amount?: number
+          unit_cost?: number | null
+          updated_at?: string
+          usage_amount?: number | null
+          user_id: string
+          utility_type: string
+        }
+        Update: {
+          billing_period?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          property_id?: string
+          status?: string
+          tenant_id?: string
+          total_amount?: number
+          unit_cost?: number | null
+          updated_at?: string
+          usage_amount?: number | null
+          user_id?: string
+          utility_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "utility_bills_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "utility_bills_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

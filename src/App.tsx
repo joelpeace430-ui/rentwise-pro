@@ -65,6 +65,22 @@ const App = () => (
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route
+                    path="/agent/dashboard"
+                    element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/agent/properties"
+                    element={<ProtectedRoute><AgentProperties /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/agent/tenants"
+                    element={<ProtectedRoute><AgentTenants /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/agent/payments"
+                    element={<ProtectedRoute><AgentPayments /></ProtectedRoute>}
+                  />
+                  <Route
                     path="/"
                     element={
                       <ProtectedRoute>

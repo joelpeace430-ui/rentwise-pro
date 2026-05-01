@@ -153,16 +153,14 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
           </div>
         </div>
 
-        {isAdmin() && (
-          <Link
-            to="/settings"
-            onClick={onNavigate}
-            className={location.pathname === "/settings" ? "nav-item-active" : "nav-item"}
-          >
-            <Settings className="h-5 w-5" />
-            <span>Settings</span>
-          </Link>
-        )}
+        <Link
+          to="/settings"
+          onClick={onNavigate}
+          className={location.pathname === "/settings" ? "nav-item-active" : "nav-item"}
+        >
+          <Settings className="h-5 w-5" />
+          <span>Settings</span>
+        </Link>
         <button
           onClick={handleSignOut}
           className="nav-item w-full text-left"

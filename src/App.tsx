@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TenantAuthProvider } from "@/contexts/TenantAuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import FeatureGate from "@/components/auth/FeatureGate";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -116,7 +117,7 @@ const App = () => (
                     path="/payments"
                     element={
                       <ProtectedRoute>
-                        <Payments />
+                        <FeatureGate feature="finance"><Payments /></FeatureGate>
                       </ProtectedRoute>
                     }
                   />
@@ -124,7 +125,7 @@ const App = () => (
                     path="/debts"
                     element={
                       <ProtectedRoute>
-                        <Debts />
+                        <FeatureGate feature="finance"><Debts /></FeatureGate>
                       </ProtectedRoute>
                     }
                   />
@@ -132,7 +133,7 @@ const App = () => (
                     path="/expenses"
                     element={
                       <ProtectedRoute>
-                        <Expenses />
+                        <FeatureGate feature="expenses"><Expenses /></FeatureGate>
                       </ProtectedRoute>
                     }
                   />
@@ -140,7 +141,7 @@ const App = () => (
                     path="/maintenance"
                     element={
                       <ProtectedRoute>
-                        <Maintenance />
+                        <FeatureGate feature="maintenance"><Maintenance /></FeatureGate>
                       </ProtectedRoute>
                     }
                   />
@@ -148,7 +149,7 @@ const App = () => (
                     path="/reports"
                     element={
                       <ProtectedRoute>
-                        <Reports />
+                        <FeatureGate feature="reports"><Reports /></FeatureGate>
                       </ProtectedRoute>
                     }
                   />
@@ -156,7 +157,7 @@ const App = () => (
                     path="/tax"
                     element={
                       <ProtectedRoute>
-                        <TaxCenter />
+                        <FeatureGate feature="tax"><TaxCenter /></FeatureGate>
                       </ProtectedRoute>
                     }
                   />

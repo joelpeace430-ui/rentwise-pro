@@ -20,6 +20,8 @@ import { User, Bell, CreditCard, Shield, Building2, Loader2, Mail, Phone, MapPin
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import UserManagement from "@/components/settings/UserManagement";
+import FeatureToggleManagement from "@/components/settings/FeatureToggleManagement";
+import { ToggleRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -172,7 +174,7 @@ const Settings = () => {
       subtitle="Manage your account and preferences"
     >
       <Tabs defaultValue="profile" className="max-w-5xl">
-        <TabsList className={`grid w-full mb-6 ${isAdmin() ? 'grid-cols-5' : 'grid-cols-4'}`}>
+        <TabsList className={`grid w-full mb-6 ${isAdmin() ? 'grid-cols-6' : 'grid-cols-4'}`}>
           <TabsTrigger value="profile" className="gap-2">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
@@ -193,6 +195,12 @@ const Settings = () => {
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Users</span>
+            </TabsTrigger>
+          )}
+          {isAdmin() && (
+            <TabsTrigger value="features" className="gap-2">
+              <ToggleRight className="h-4 w-4" />
+              <span className="hidden sm:inline">Features</span>
             </TabsTrigger>
           )}
         </TabsList>
@@ -576,6 +584,12 @@ const Settings = () => {
         {isAdmin() && (
           <TabsContent value="users">
             <UserManagement />
+          </TabsContent>
+        )}
+
+        {isAdmin() && (
+          <TabsContent value="features">
+            <FeatureToggleManagement />
           </TabsContent>
         )}
       </Tabs>

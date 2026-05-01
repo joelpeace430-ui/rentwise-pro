@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { useFeatureToggles } from "@/hooks/useFeatureToggles";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,31 +44,31 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     isLandlord,
     canManageProperties,
     canManageTenants,
-    canViewFinancials,
     canViewMaintenance,
-    canViewReports,
-    canViewTax,
   } = useUserRoles();
+  const { isFeatureEnabled } = useFeatureToggles();
 
   const agentNavigation = [
     { name: "Dashboard", href: "/agent/dashboard", icon: LayoutDashboard, show: true },
     { name: "Properties", href: "/agent/properties", icon: Building2, show: true },
     { name: "Tenants", href: "/agent/tenants", icon: Users, show: true },
-    { name: "Payments", href: "/agent/payments", icon: CreditCard, show: true },
-    { name: "Maintenance", href: "/maintenance", icon: Wrench, show: true },
+    { name: "Payments", href: "/agent/payments", icon: CreditCard, show: isFeatureEnabled("finance") },
+    { name: "Expenses", href: "/expenses", icon: Wallet, show: isFeatureEnabled("expenses") },
+    { name: "Reports", href: "/reports", icon: BarChart3, show: isFeatureEnabled("reports") },
+    { name: "Maintenance", href: "/maintenance", icon: Wrench, show: isFeatureEnabled("maintenance") },
   ];
 
   const landlordNavigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard, show: true },
     { name: "Properties", href: "/properties", icon: Building2, show: canManageProperties() },
     { name: "Tenants", href: "/tenants", icon: Users, show: canManageTenants() },
-    { name: "Invoices", href: "/invoices", icon: FileText, show: canViewFinancials() },
-    { name: "Payments", href: "/payments", icon: CreditCard, show: canViewFinancials() },
-    { name: "Debts", href: "/debts", icon: AlertTriangle, show: canViewFinancials() },
-    { name: "Expenses", href: "/expenses", icon: Wallet, show: canViewFinancials() },
-    { name: "Maintenance", href: "/maintenance", icon: Wrench, show: canViewMaintenance() },
-    { name: "Reports", href: "/reports", icon: BarChart3, show: canViewReports() },
-    { name: "Tax Center", href: "/tax", icon: Receipt, show: canViewTax() },
+    { name: "Invoices", href: "/invoices", icon: FileText, show: isFeatureEnabled("finance") },
+    { name: "Payments", href: "/payments", icon: CreditCard, show: isFeatureEnabled("finance") },
+    { name: "Debts", href: "/debts", icon: AlertTriangle, show: isFeatureEnabled("finance") },
+    { name: "Expenses", href: "/expenses", icon: Wallet, show: isFeatureEnabled("expenses") },
+    { name: "Maintenance", href: "/maintenance", icon: Wrench, show: canViewMaintenance() && isFeatureEnabled("maintenance") },
+    { name: "Reports", href: "/reports", icon: BarChart3, show: isFeatureEnabled("reports") },
+    { name: "Tax Center", href: "/tax", icon: Receipt, show: isFeatureEnabled("tax") },
   ];
 
   // Use agent nav if user is agent-only (not admin/landlord)

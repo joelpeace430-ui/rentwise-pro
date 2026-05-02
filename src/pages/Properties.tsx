@@ -217,7 +217,9 @@ const Properties = () => {
                         </div>
                         <div className="min-w-0">
                           <CardTitle className="text-base truncate">
-                            {property.name}
+                            <Link to={`/properties/${property.id}`} className="hover:text-primary transition-colors">
+                              {property.name}
+                            </Link>
                           </CardTitle>
                           <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                             <MapPin className="h-3 w-3 shrink-0" />
@@ -232,6 +234,11 @@ const Properties = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link to={`/properties/${property.id}`}>
+                              <ExternalLink className="mr-2 h-4 w-4" /> View Details
+                            </Link>
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEdit(property)}>
                             Edit Property
                           </DropdownMenuItem>

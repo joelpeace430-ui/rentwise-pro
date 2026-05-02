@@ -90,6 +90,137 @@ export type Database = {
           },
         ]
       }
+      caretaker_assignments: {
+        Row: {
+          caretaker_id: string
+          commission_rate: number
+          commission_type: string
+          created_at: string
+          id: string
+          landlord_user_id: string
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          caretaker_id: string
+          commission_rate?: number
+          commission_type?: string
+          created_at?: string
+          id?: string
+          landlord_user_id: string
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          caretaker_id?: string
+          commission_rate?: number
+          commission_type?: string
+          created_at?: string
+          id?: string
+          landlord_user_id?: string
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caretaker_assignments_caretaker_id_fkey"
+            columns: ["caretaker_id"]
+            isOneToOne: false
+            referencedRelation: "caretakers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      caretakers: {
+        Row: {
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          notes: string | null
+          phone: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          notes?: string | null
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      commission_ledger: {
+        Row: {
+          caretaker_id: string | null
+          commission_amount: number
+          commission_rate: number
+          commission_type: string
+          created_at: string
+          id: string
+          landlord_user_id: string
+          paid_at: string | null
+          payment_amount: number
+          payment_id: string
+          property_id: string
+          recipient_type: string
+          recipient_user_id: string | null
+          status: string
+        }
+        Insert: {
+          caretaker_id?: string | null
+          commission_amount: number
+          commission_rate: number
+          commission_type: string
+          created_at?: string
+          id?: string
+          landlord_user_id: string
+          paid_at?: string | null
+          payment_amount: number
+          payment_id: string
+          property_id: string
+          recipient_type: string
+          recipient_user_id?: string | null
+          status?: string
+        }
+        Update: {
+          caretaker_id?: string | null
+          commission_amount?: number
+          commission_rate?: number
+          commission_type?: string
+          created_at?: string
+          id?: string
+          landlord_user_id?: string
+          paid_at?: string | null
+          payment_amount?: number
+          payment_id?: string
+          property_id?: string
+          recipient_type?: string
+          recipient_user_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string
@@ -595,9 +726,11 @@ export type Database = {
           created_at: string
           grace_period_days: number
           id: string
+          location: string | null
           name: string
           penalty_rate: number
           penalty_type: string
+          rent_per_unit: number
           status: string
           total_units: number
           updated_at: string
@@ -608,9 +741,11 @@ export type Database = {
           created_at?: string
           grace_period_days?: number
           id?: string
+          location?: string | null
           name: string
           penalty_rate?: number
           penalty_type?: string
+          rent_per_unit?: number
           status?: string
           total_units?: number
           updated_at?: string
@@ -621,9 +756,11 @@ export type Database = {
           created_at?: string
           grace_period_days?: number
           id?: string
+          location?: string | null
           name?: string
           penalty_rate?: number
           penalty_type?: string
+          rent_per_unit?: number
           status?: string
           total_units?: number
           updated_at?: string
@@ -994,6 +1131,7 @@ export type Database = {
         Row: {
           billing_period: string
           created_at: string
+          due_date: string | null
           id: string
           notes: string | null
           property_id: string
@@ -1009,6 +1147,7 @@ export type Database = {
         Insert: {
           billing_period: string
           created_at?: string
+          due_date?: string | null
           id?: string
           notes?: string | null
           property_id: string
@@ -1024,6 +1163,7 @@ export type Database = {
         Update: {
           billing_period?: string
           created_at?: string
+          due_date?: string | null
           id?: string
           notes?: string | null
           property_id?: string

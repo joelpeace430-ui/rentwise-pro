@@ -18,6 +18,10 @@ import {
   Wallet,
   Wrench,
   AlertTriangle,
+  HardHat,
+  Briefcase,
+  Droplet,
+  Coins,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -62,9 +66,13 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Dashboard", href: "/", icon: LayoutDashboard, show: true },
     { name: "Properties", href: "/properties", icon: Building2, show: canManageProperties() },
     { name: "Tenants", href: "/tenants", icon: Users, show: canManageTenants() },
+    { name: "Caretakers", href: "/caretakers", icon: HardHat, show: canManageProperties() },
+    { name: "Landlords", href: "/landlords", icon: Briefcase, show: isAdmin() },
     { name: "Invoices", href: "/invoices", icon: FileText, show: isFeatureEnabled("finance") },
     { name: "Payments", href: "/payments", icon: CreditCard, show: isFeatureEnabled("finance") },
+    { name: "Commissions", href: "/commissions", icon: Coins, show: isFeatureEnabled("finance") && canManageProperties() },
     { name: "Debts", href: "/debts", icon: AlertTriangle, show: isFeatureEnabled("finance") },
+    { name: "Utilities", href: "/utilities", icon: Droplet, show: canManageProperties() },
     { name: "Expenses", href: "/expenses", icon: Wallet, show: isFeatureEnabled("expenses") },
     { name: "Maintenance", href: "/maintenance", icon: Wrench, show: canViewMaintenance() && isFeatureEnabled("maintenance") },
     { name: "Reports", href: "/reports", icon: BarChart3, show: isFeatureEnabled("reports") },

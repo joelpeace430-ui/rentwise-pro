@@ -30,7 +30,9 @@ import {
   Sparkles,
   Home,
   Users,
+  ExternalLink,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useProperties, Property } from "@/hooks/useProperties";
 import PropertyDialog from "@/components/properties/PropertyDialog";
 import { SmartPricingCard } from "@/components/ai/SmartPricingCard";

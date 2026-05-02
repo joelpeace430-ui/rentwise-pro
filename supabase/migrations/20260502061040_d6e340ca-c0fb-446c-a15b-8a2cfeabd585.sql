@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.create_commission_entries() FROM PUBLIC, anon, authenticated;

@@ -182,6 +182,29 @@ serve(async (req: Request) => {
           console.error("Failed to send report email:", e);
         }
       }
+
+      // SMS digest via Africa's Talking (best-effort)
+      const atUser = Deno.env.get("AFRICASTALKING_USERNAME");
+      const atKey = Deno.env.get("AFRICASTALKING_API_KEY");
+      const { data: profilePhone } = await supabase
+        .from("profiles").select("phone").eq("user_id", userId).maybeSingle();
+      const phone = profilePhone?.phone;
+      if (atUser && atKey && phone) {
+        try {
+          const smsBody = `RentFlow ${monthLabel}: Revenue ${formatCurrency(totalRevenue)}, Net ${formatCurrency(netIncome)}, Collection ${collectionRate}%, Occupancy ${occupancyRate}%.`;
+          await fetch("https://api.africastalking.com/version1/messaging", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              apiKey: atKey,
+              Accept: "application/json",
+            },
+            body: new URLSearchParams({ username: atUser, to: phone, message: smsBody }).toString(),
+          });
+        } catch (e) {
+          console.error("Failed to send SMS digest:", e);
+        }
+      }
     }
 
     console.log(`Monthly reports: ${reportsSent} sent`);

@@ -27,6 +27,11 @@ import AgentDashboard from "./pages/AgentDashboard";
 import AgentProperties from "./pages/AgentProperties";
 import AgentTenants from "./pages/AgentTenants";
 import AgentPayments from "./pages/AgentPayments";
+import PropertyDetail from "./pages/PropertyDetail";
+import Caretakers from "./pages/Caretakers";
+import Landlords from "./pages/Landlords";
+import UtilityBilling from "./pages/UtilityBilling";
+import Commissions from "./pages/Commissions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -96,6 +101,30 @@ const App = () => (
                         <Properties />
                       </ProtectedRoute>
                     }
+                  />
+                  <Route
+                    path="/properties/:id"
+                    element={
+                      <ProtectedRoute>
+                        <PropertyDetail />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/caretakers"
+                    element={<ProtectedRoute><Caretakers /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/landlords"
+                    element={<ProtectedRoute><Landlords /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/utilities"
+                    element={<ProtectedRoute><UtilityBilling /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/commissions"
+                    element={<ProtectedRoute><FeatureGate feature="finance"><Commissions /></FeatureGate></ProtectedRoute>}
                   />
                   <Route
                     path="/tenants"

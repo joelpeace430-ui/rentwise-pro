@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Building2, Mail, Phone } from "lucide-react";
+import { Loader2, Building2, Mail, Phone, ArrowLeft, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { Navigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface LandlordRow {
   user_id: string;
@@ -22,6 +23,10 @@ const Landlords = () => {
   const { isAdmin, loading: rolesLoading } = useUserRoles();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<LandlordRow[]>([]);
+  const [selected, setSelected] = useState<LandlordRow | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [tenants, setTenants] = useState<any[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -56,8 +61,98 @@ const Landlords = () => {
     if (!rolesLoading && isAdmin()) load();
   }, [rolesLoading]);
 
+  const openLandlord = async (l: LandlordRow) => {
+    setSelected(l);
+    setDetailLoading(true);
+    const [{ data: props }, { data: tens }] = await Promise.all([
+      supabase.from("properties").select("*").eq("user_id", l.user_id).order("created_at", { ascending: false }),
+      supabase.from("tenants").select("*").eq("user_id", l.user_id).order("created_at", { ascending: false }),
+    ]);
+    setProperties(props || []);
+    setTenants(tens || []);
+    setDetailLoading(false);
+  };
+
   if (rolesLoading) return null;
   if (!isAdmin()) return <Navigate to="/" replace />;
+
+  const displayName = (l: LandlordRow) =>
+    [l.first_name, l.last_name].filter(Boolean).join(" ") || l.email || "—";
+
+  if (selected) {
+    return (
+      <DashboardLayout title={displayName(selected)} subtitle={selected.business_name || "Landlord details"}>
+        <div className="space-y-6">
+          <Button variant="outline" size="sm" onClick={() => setSelected(null)}>
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to landlords
+          </Button>
+
+          {detailLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+          ) : (
+            <>
+              <section>
+                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <Building2 className="h-5 w-5" /> Properties ({properties.length})
+                </h2>
+                {properties.length === 0 ? (
+                  <Card><CardContent className="py-8 text-center text-muted-foreground">No properties.</CardContent></Card>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {properties.map(p => {
+                      const propTenants = tenants.filter(t => t.property_id === p.id);
+                      return (
+                        <Card key={p.id}>
+                          <CardContent className="p-4 space-y-2">
+                            <p className="font-semibold">{p.name}</p>
+                            <p className="text-xs text-muted-foreground">{p.address}</p>
+                            <div className="flex gap-2 pt-1">
+                              <Badge variant="secondary">{p.total_units} units</Badge>
+                              <Badge variant="outline">{propTenants.length} tenants</Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+
+              <section>
+                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <Users className="h-5 w-5" /> Tenants ({tenants.length})
+                </h2>
+                {tenants.length === 0 ? (
+                  <Card><CardContent className="py-8 text-center text-muted-foreground">No tenants.</CardContent></Card>
+                ) : (
+                  <Card>
+                    <CardContent className="p-0 divide-y">
+                      {tenants.map(t => {
+                        const prop = properties.find(p => p.id === t.property_id);
+                        return (
+                          <div key={t.id} className="flex items-center justify-between p-4">
+                            <div>
+                              <p className="font-medium">{t.first_name} {t.last_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {prop?.name || "—"} · Unit {t.unit_number} · {t.email}
+                              </p>
+                            </div>
+                            <Badge variant={t.rent_status === "paid" ? "default" : "secondary"}>
+                              {t.rent_status}
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                    </CardContent>
+                  </Card>
+                )}
+              </section>
+            </>
+          )}
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Landlords" subtitle="All landlords across the platform">
@@ -68,10 +163,14 @@ const Landlords = () => {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map(r => (
-            <Card key={r.user_id}>
+            <Card
+              key={r.user_id}
+              onClick={() => openLandlord(r)}
+              className="cursor-pointer transition-shadow hover:shadow-md"
+            >
               <CardContent className="p-5 space-y-3">
                 <div>
-                  <p className="font-semibold">{[r.first_name, r.last_name].filter(Boolean).join(" ") || r.email || "—"}</p>
+                  <p className="font-semibold">{displayName(r)}</p>
                   {r.business_name && <p className="text-xs text-muted-foreground">{r.business_name}</p>}
                 </div>
                 <div className="space-y-1 text-sm text-muted-foreground">

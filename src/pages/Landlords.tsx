@@ -53,8 +53,8 @@ const Landlords = () => {
       setRows(enriched);
       setLoading(false);
     };
-    if (isAdmin()) load();
-  }, [isAdmin]);
+    if (!rolesLoading && isAdmin()) load();
+  }, [rolesLoading]);
 
   if (rolesLoading) return null;
   if (!isAdmin()) return <Navigate to="/" replace />;

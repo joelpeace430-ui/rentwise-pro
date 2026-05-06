@@ -35,6 +35,7 @@ export const useFeatureToggles = () => {
       setLoading(false);
       return;
     }
+    setLoading(true);
     const { data, error } = await supabase
       .from("feature_toggles")
       .select("id, role, feature_key, enabled");

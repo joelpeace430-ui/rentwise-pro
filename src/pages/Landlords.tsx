@@ -68,10 +68,35 @@ const Landlords = () => {
       supabase.from("properties").select("*").eq("user_id", l.user_id).order("created_at", { ascending: false }),
       supabase.from("tenants").select("*").eq("user_id", l.user_id).order("created_at", { ascending: false }),
     ]);
+    const tenantList = tens || [];
+    const tenantIds = tenantList.map((t: any) => t.id);
+
+    let debtsByTenant: Record<string, number> = {};
+    let lastPayByTenant: Record<string, string> = {};
+    if (tenantIds.length) {
+      const [{ data: debts }, { data: pays }] = await Promise.all([
+        supabase.from("tenant_debts").select("tenant_id, total_owed, amount_paid, status").in("tenant_id", tenantIds),
+        supabase.from("payments").select("tenant_id, payment_date").in("tenant_id", tenantIds).eq("status", "completed").order("payment_date", { ascending: false }),
+      ]);
+      (debts || []).forEach((d: any) => {
+        if (d.status === "paid") return;
+        const owed = Number(d.total_owed || 0) - Number(d.amount_paid || 0);
+        debtsByTenant[d.tenant_id] = (debtsByTenant[d.tenant_id] || 0) + Math.max(0, owed);
+      });
+      (pays || []).forEach((p: any) => {
+        if (!lastPayByTenant[p.tenant_id]) lastPayByTenant[p.tenant_id] = p.payment_date;
+      });
+    }
+
     setProperties(props || []);
-    setTenants(tens || []);
+    setTenants(tenantList.map((t: any) => ({
+      ...t,
+      _balance: debtsByTenant[t.id] || 0,
+      _lastPayment: lastPayByTenant[t.id] || null,
+    })));
     setDetailLoading(false);
   };
+
 
   if (rolesLoading) return null;
   if (!isAdmin()) return <Navigate to="/" replace />;

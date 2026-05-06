@@ -155,16 +155,24 @@ const Landlords = () => {
                       {tenants.map(t => {
                         const prop = properties.find(p => p.id === t.property_id);
                         return (
-                          <div key={t.id} className="flex items-center justify-between p-4">
-                            <div>
-                              <p className="font-medium">{t.first_name} {t.last_name}</p>
-                              <p className="text-xs text-muted-foreground">
+                          <div key={t.id} className="flex items-center justify-between gap-4 p-4">
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">{t.first_name} {t.last_name}</p>
+                              <p className="text-xs text-muted-foreground truncate">
                                 {prop?.name || "—"} · Unit {t.unit_number} · {t.email}
                               </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Last payment: {t._lastPayment ? new Date(t._lastPayment).toLocaleDateString("en-KE") : "—"}
+                              </p>
                             </div>
-                            <Badge variant={t.rent_status === "paid" ? "default" : "secondary"}>
-                              {t.rent_status}
-                            </Badge>
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                              <span className={`text-sm font-semibold ${t._balance > 0 ? "text-destructive" : "text-foreground"}`}>
+                                KSh {Number(t._balance || 0).toLocaleString("en-KE")}
+                              </span>
+                              <Badge variant={t.rent_status === "paid" ? "default" : "secondary"}>
+                                {t.rent_status}
+                              </Badge>
+                            </div>
                           </div>
                         );
                       })}

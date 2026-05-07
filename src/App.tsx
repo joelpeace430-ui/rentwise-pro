@@ -27,6 +27,8 @@ import AgentDashboard from "./pages/AgentDashboard";
 import AgentProperties from "./pages/AgentProperties";
 import AgentTenants from "./pages/AgentTenants";
 import AgentPayments from "./pages/AgentPayments";
+import AgentLandlords from "./pages/AgentLandlords";
+import AgentCommissions from "./pages/AgentCommissions";
 import PropertyDetail from "./pages/PropertyDetail";
 import Caretakers from "./pages/Caretakers";
 import Landlords from "./pages/Landlords";
@@ -85,6 +87,14 @@ const App = () => (
                   <Route
                     path="/agent/payments"
                     element={<ProtectedRoute><AgentPayments /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/agent/landlords"
+                    element={<ProtectedRoute><AgentLandlords /></ProtectedRoute>}
+                  />
+                  <Route
+                    path="/agent/commissions"
+                    element={<ProtectedRoute><AgentCommissions /></ProtectedRoute>}
                   />
                   <Route
                     path="/"

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Building2, Mail, Phone, ArrowLeft, Users } from "lucide-react";
+import { Loader2, Building2, Mail, Phone, ArrowLeft, Users, Coins } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { Navigate } from "react-router-dom";
@@ -27,6 +27,7 @@ const Landlords = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [properties, setProperties] = useState<any[]>([]);
   const [tenants, setTenants] = useState<any[]>([]);
+  const [commissions, setCommissions] = useState<any[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -87,6 +88,28 @@ const Landlords = () => {
         if (!lastPayByTenant[p.tenant_id]) lastPayByTenant[p.tenant_id] = p.payment_date;
       });
     }
+
+    // Commission ledger entries for landlord's properties (agent + caretaker)
+    const { data: ledger } = await supabase
+      .from("commission_ledger" as any)
+      .select("*")
+      .eq("landlord_user_id", l.user_id)
+      .order("created_at", { ascending: false });
+    const ledgerList = (ledger || []) as any[];
+    const recAgentIds = Array.from(new Set(ledgerList.filter(e => e.recipient_type === "agent").map(e => e.recipient_user_id).filter(Boolean)));
+    const recCareIds = Array.from(new Set(ledgerList.filter(e => e.recipient_type === "caretaker").map(e => e.caretaker_id).filter(Boolean)));
+    const [{ data: agentProfs }, { data: cares }] = await Promise.all([
+      recAgentIds.length ? supabase.from("profiles").select("user_id, email, first_name, last_name").in("user_id", recAgentIds) : Promise.resolve({ data: [] } as any),
+      recCareIds.length ? supabase.from("caretakers" as any).select("id, first_name, last_name").in("id", recCareIds) : Promise.resolve({ data: [] } as any),
+    ]);
+    const agentMap = Object.fromEntries((agentProfs || []).map((p: any) => [p.user_id, `${p.first_name || ""} ${p.last_name || ""}`.trim() || p.email]));
+    const careMap = Object.fromEntries(((cares || []) as any[]).map((c: any) => [c.id, `${c.first_name} ${c.last_name}`]));
+    const propMap = Object.fromEntries((props || []).map((p: any) => [p.id, p.name]));
+    setCommissions(ledgerList.map((e: any) => ({
+      ...e,
+      property_name: propMap[e.property_id] || "—",
+      recipient_name: e.recipient_type === "agent" ? (agentMap[e.recipient_user_id] || "Agent") : (careMap[e.caretaker_id] || "Caretaker"),
+    })));
 
     setProperties(props || []);
     setTenants(tenantList.map((t: any) => ({
@@ -178,6 +201,35 @@ const Landlords = () => {
                       })}
                     </CardContent>
                   </Card>
+                )}
+              </section>
+
+              <section>
+                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <Coins className="h-5 w-5" /> Commissions ({commissions.length})
+                </h2>
+                {commissions.length === 0 ? (
+                  <Card><CardContent className="py-8 text-center text-muted-foreground">No commission entries yet.</CardContent></Card>
+                ) : (
+                  <Card><CardContent className="p-0 divide-y">
+                    {commissions.map((e: any) => (
+                      <div key={e.id} className="flex items-center justify-between gap-4 p-4">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {e.recipient_name} <span className="text-xs text-muted-foreground capitalize">({e.recipient_type})</span>
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {e.property_name} · {e.commission_type === "fixed" ? "Fixed" : `${e.commission_rate}%`} on KSh {Number(e.payment_amount).toLocaleString("en-KE")}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleDateString("en-KE")}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-semibold">KSh {Number(e.commission_amount).toLocaleString("en-KE")}</p>
+                          <Badge variant={e.status === "paid" ? "default" : "secondary"} className="mt-1">{e.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent></Card>
                 )}
               </section>
             </>

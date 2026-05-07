@@ -203,6 +203,35 @@ const Landlords = () => {
                   </Card>
                 )}
               </section>
+
+              <section>
+                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <Coins className="h-5 w-5" /> Commissions ({commissions.length})
+                </h2>
+                {commissions.length === 0 ? (
+                  <Card><CardContent className="py-8 text-center text-muted-foreground">No commission entries yet.</CardContent></Card>
+                ) : (
+                  <Card><CardContent className="p-0 divide-y">
+                    {commissions.map((e: any) => (
+                      <div key={e.id} className="flex items-center justify-between gap-4 p-4">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {e.recipient_name} <span className="text-xs text-muted-foreground capitalize">({e.recipient_type})</span>
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {e.property_name} · {e.commission_type === "fixed" ? "Fixed" : `${e.commission_rate}%`} on KSh {Number(e.payment_amount).toLocaleString("en-KE")}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleDateString("en-KE")}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-semibold">KSh {Number(e.commission_amount).toLocaleString("en-KE")}</p>
+                          <Badge variant={e.status === "paid" ? "default" : "secondary"} className="mt-1">{e.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent></Card>
+                )}
+              </section>
             </>
           )}
         </div>

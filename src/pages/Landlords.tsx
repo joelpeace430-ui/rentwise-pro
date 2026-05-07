@@ -89,6 +89,28 @@ const Landlords = () => {
       });
     }
 
+    // Commission ledger entries for landlord's properties (agent + caretaker)
+    const { data: ledger } = await supabase
+      .from("commission_ledger" as any)
+      .select("*")
+      .eq("landlord_user_id", l.user_id)
+      .order("created_at", { ascending: false });
+    const ledgerList = (ledger || []) as any[];
+    const recAgentIds = Array.from(new Set(ledgerList.filter(e => e.recipient_type === "agent").map(e => e.recipient_user_id).filter(Boolean)));
+    const recCareIds = Array.from(new Set(ledgerList.filter(e => e.recipient_type === "caretaker").map(e => e.caretaker_id).filter(Boolean)));
+    const [{ data: agentProfs }, { data: cares }] = await Promise.all([
+      recAgentIds.length ? supabase.from("profiles").select("user_id, email, first_name, last_name").in("user_id", recAgentIds) : Promise.resolve({ data: [] } as any),
+      recCareIds.length ? supabase.from("caretakers" as any).select("id, first_name, last_name").in("id", recCareIds) : Promise.resolve({ data: [] } as any),
+    ]);
+    const agentMap = Object.fromEntries((agentProfs || []).map((p: any) => [p.user_id, `${p.first_name || ""} ${p.last_name || ""}`.trim() || p.email]));
+    const careMap = Object.fromEntries(((cares || []) as any[]).map((c: any) => [c.id, `${c.first_name} ${c.last_name}`]));
+    const propMap = Object.fromEntries((props || []).map((p: any) => [p.id, p.name]));
+    setCommissions(ledgerList.map((e: any) => ({
+      ...e,
+      property_name: propMap[e.property_id] || "—",
+      recipient_name: e.recipient_type === "agent" ? (agentMap[e.recipient_user_id] || "Agent") : (careMap[e.caretaker_id] || "Caretaker"),
+    })));
+
     setProperties(props || []);
     setTenants(tenantList.map((t: any) => ({
       ...t,

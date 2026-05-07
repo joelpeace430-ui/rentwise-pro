@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Building2, Mail, Phone, ArrowLeft, Users } from "lucide-react";
+import { Loader2, Building2, Mail, Phone, ArrowLeft, Users, Coins } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { Navigate } from "react-router-dom";
@@ -27,6 +27,7 @@ const Landlords = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [properties, setProperties] = useState<any[]>([]);
   const [tenants, setTenants] = useState<any[]>([]);
+  const [commissions, setCommissions] = useState<any[]>([]);
 
   useEffect(() => {
     const load = async () => {

@@ -71,6 +71,72 @@ const Caretakers = () => {
     return createCaretaker(input);
   };
 
+  if (selected) {
+    const totalPending = groups.reduce((s, g) => s + g.pending, 0);
+    const totalPaid = groups.reduce((s, g) => s + g.paid, 0);
+    return (
+      <DashboardLayout title={`${selected.first_name} ${selected.last_name}`} subtitle="Commission earnings by landlord">
+        <div className="space-y-6">
+          <Button variant="outline" size="sm" onClick={() => setSelected(null)}>
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to caretakers
+          </Button>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Card><CardContent className="p-4 flex items-center justify-between">
+              <div><p className="text-sm text-muted-foreground">Pending</p><p className="text-2xl font-bold">{formatCurrency(totalPending)}</p></div>
+              <Coins className="h-6 w-6 text-warning" />
+            </CardContent></Card>
+            <Card><CardContent className="p-4 flex items-center justify-between">
+              <div><p className="text-sm text-muted-foreground">Paid</p><p className="text-2xl font-bold">{formatCurrency(totalPaid)}</p></div>
+              <Coins className="h-6 w-6 text-success" />
+            </CardContent></Card>
+          </div>
+
+          {detailLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+          ) : groups.length === 0 ? (
+            <Card><CardContent className="py-10 text-center text-muted-foreground">No commission entries yet.</CardContent></Card>
+          ) : (
+            <div className="space-y-4">
+              {groups.map(g => (
+                <Card key={g.landlord_user_id}>
+                  <CardContent className="p-0">
+                    <div className="flex items-center justify-between p-4 border-b">
+                      <div>
+                        <p className="font-semibold">{g.landlord_name}</p>
+                        <p className="text-xs text-muted-foreground">{g.entries.length} payment{g.entries.length === 1 ? "" : "s"}</p>
+                      </div>
+                      <div className="text-right text-sm">
+                        <p>Pending: <span className="font-semibold">{formatCurrency(g.pending)}</span></p>
+                        <p className="text-muted-foreground">Paid: {formatCurrency(g.paid)}</p>
+                      </div>
+                    </div>
+                    <div className="divide-y">
+                      {g.entries.map((e: any) => (
+                        <div key={e.id} className="flex items-center justify-between p-4">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{e.property_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {e.commission_type === "fixed" ? "Fixed" : `${e.commission_rate}%`} on {formatCurrency(e.payment_amount)} · {new Date(e.created_at).toLocaleDateString("en-KE")}
+                            </p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="font-semibold">{formatCurrency(Number(e.commission_amount))}</p>
+                            <Badge variant={e.status === "paid" ? "default" : "secondary"} className="mt-1">{e.status}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title="Caretakers" subtitle="Manage caretakers and property assignments">
       <div className="space-y-6">
@@ -96,7 +162,7 @@ const Caretakers = () => {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((c) => (
-              <Card key={c.id} className="hover:shadow-md transition-shadow">
+              <Card key={c.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelected(c)}>
                 <CardContent className="p-5">
                   <div className="flex justify-between items-start mb-3">
                     <div>
@@ -105,9 +171,9 @@ const Caretakers = () => {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}><MoreHorizontal className="h-4 w-4" /></Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenuItem onClick={() => { setEditing(c); setOpen(true); }}>Edit</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onClick={() => deleteCaretaker(c.id)}>Remove</DropdownMenuItem>
                       </DropdownMenuContent>

@@ -1,21 +1,66 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Loader2, Wrench, Phone, Mail, MoreHorizontal } from "lucide-react";
+import { Plus, Search, Loader2, Wrench, Phone, Mail, MoreHorizontal, ArrowLeft, Coins } from "lucide-react";
 import { useCaretakers, Caretaker } from "@/hooks/useCaretakers";
 import CaretakerDialog from "@/components/caretakers/CaretakerDialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { formatCurrency } from "@/lib/currency";
 
 const Caretakers = () => {
   const { caretakers, loading, createCaretaker, updateCaretaker, deleteCaretaker } = useCaretakers();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Caretaker | null>(null);
+  const [selected, setSelected] = useState<Caretaker | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [groups, setGroups] = useState<Array<{ landlord_user_id: string; landlord_name: string; pending: number; paid: number; entries: any[] }>>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!selected) return;
+      setDetailLoading(true);
+      const { data } = await supabase
+        .from("commission_ledger" as any)
+        .select("*")
+        .eq("recipient_type", "caretaker")
+        .eq("caretaker_id", selected.id)
+        .order("created_at", { ascending: false });
+      const list = (data || []) as any[];
+      const landlordIds = Array.from(new Set(list.map((e: any) => e.landlord_user_id)));
+      const propIds = Array.from(new Set(list.map((e: any) => e.property_id)));
+      const [{ data: profs }, { data: props }] = await Promise.all([
+        landlordIds.length ? supabase.from("profiles").select("user_id, email, first_name, last_name").in("user_id", landlordIds) : Promise.resolve({ data: [] } as any),
+        propIds.length ? supabase.from("properties").select("id, name").in("id", propIds) : Promise.resolve({ data: [] } as any),
+      ]);
+      const profMap = Object.fromEntries((profs || []).map((p: any) => [p.user_id, p]));
+      const propMap = Object.fromEntries((props || []).map((p: any) => [p.id, p.name]));
+      const byLandlord: Record<string, any> = {};
+      list.forEach((e: any) => {
+        const key = e.landlord_user_id;
+        if (!byLandlord[key]) {
+          const p = profMap[key];
+          byLandlord[key] = {
+            landlord_user_id: key,
+            landlord_name: p ? (`${p.first_name || ""} ${p.last_name || ""}`.trim() || p.email) : "Unknown",
+            pending: 0, paid: 0, entries: [],
+          };
+        }
+        byLandlord[key].entries.push({ ...e, property_name: propMap[e.property_id] || "—" });
+        if (e.status === "paid") byLandlord[key].paid += Number(e.commission_amount);
+        else byLandlord[key].pending += Number(e.commission_amount);
+      });
+      setGroups(Object.values(byLandlord));
+      setDetailLoading(false);
+    };
+    load();
+  }, [selected]);
 
   const filtered = caretakers.filter(c =>
     `${c.first_name} ${c.last_name} ${c.phone || ""} ${c.email || ""}`.toLowerCase().includes(search.toLowerCase())

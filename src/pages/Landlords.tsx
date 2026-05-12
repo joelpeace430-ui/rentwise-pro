@@ -204,34 +204,89 @@ const Landlords = () => {
                 )}
               </section>
 
-              <section>
-                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <Coins className="h-5 w-5" /> Commissions ({commissions.length})
-                </h2>
-                {commissions.length === 0 ? (
-                  <Card><CardContent className="py-8 text-center text-muted-foreground">No commission entries yet.</CardContent></Card>
-                ) : (
-                  <Card><CardContent className="p-0 divide-y">
-                    {commissions.map((e: any) => (
-                      <div key={e.id} className="flex items-center justify-between gap-4 p-4">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {e.recipient_name} <span className="text-xs text-muted-foreground capitalize">({e.recipient_type})</span>
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {e.property_name} · {e.commission_type === "fixed" ? "Fixed" : `${e.commission_rate}%`} on KSh {Number(e.payment_amount).toLocaleString("en-KE")}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleDateString("en-KE")}</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="font-semibold">KSh {Number(e.commission_amount).toLocaleString("en-KE")}</p>
-                          <Badge variant={e.status === "paid" ? "default" : "secondary"} className="mt-1">{e.status}</Badge>
-                        </div>
+              {(() => {
+                const sum = (arr: any[]) => arr.reduce((s, e) => s + Number(e.commission_amount || 0), 0);
+                const agentEntries = commissions.filter(e => e.recipient_type === "agent");
+                const careEntries = commissions.filter(e => e.recipient_type === "caretaker");
+                const groups = [
+                  { key: "agent", label: "Agent", entries: agentEntries },
+                  { key: "caretaker", label: "Caretaker", entries: careEntries },
+                ];
+                const totalPending = sum(commissions.filter(e => e.status === "pending"));
+                const totalPaid = sum(commissions.filter(e => e.status === "paid"));
+                return (
+                  <section className="space-y-4">
+                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                      <Coins className="h-5 w-5" /> Commissions ({commissions.length})
+                    </h2>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Card><CardContent className="p-4 flex items-center justify-between">
+                        <div><p className="text-sm text-muted-foreground">Total pending</p>
+                          <p className="text-2xl font-bold text-warning">KSh {totalPending.toLocaleString("en-KE")}</p></div>
+                        <Coins className="h-6 w-6 text-warning" />
+                      </CardContent></Card>
+                      <Card><CardContent className="p-4 flex items-center justify-between">
+                        <div><p className="text-sm text-muted-foreground">Total paid</p>
+                          <p className="text-2xl font-bold text-success">KSh {totalPaid.toLocaleString("en-KE")}</p></div>
+                        <Coins className="h-6 w-6 text-success" />
+                      </CardContent></Card>
+                    </div>
+
+                    {commissions.length === 0 ? (
+                      <Card><CardContent className="py-8 text-center text-muted-foreground">No commission entries yet.</CardContent></Card>
+                    ) : (
+                      <div className="space-y-4">
+                        {groups.map(g => {
+                          if (g.entries.length === 0) return null;
+                          const pendingEntries = g.entries.filter(e => e.status === "pending");
+                          const paidEntries = g.entries.filter(e => e.status === "paid");
+                          const renderRow = (e: any) => (
+                            <div key={e.id} className="flex items-center justify-between gap-4 p-4">
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">{e.recipient_name}</p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {e.property_name} · {e.commission_type === "fixed" ? "Fixed" : `${e.commission_rate}%`} on KSh {Number(e.payment_amount).toLocaleString("en-KE")}
+                                </p>
+                                <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleDateString("en-KE")}</p>
+                              </div>
+                              <p className="font-semibold shrink-0">KSh {Number(e.commission_amount).toLocaleString("en-KE")}</p>
+                            </div>
+                          );
+                          return (
+                            <Card key={g.key}>
+                              <CardContent className="p-0">
+                                <div className="flex items-center justify-between p-4 border-b">
+                                  <p className="font-semibold">{g.label} commissions</p>
+                                  <div className="text-right text-sm">
+                                    <p>Pending: <span className="font-semibold text-warning">KSh {sum(pendingEntries).toLocaleString("en-KE")}</span></p>
+                                    <p className="text-muted-foreground">Paid: KSh {sum(paidEntries).toLocaleString("en-KE")}</p>
+                                  </div>
+                                </div>
+                                {pendingEntries.length > 0 && (
+                                  <div>
+                                    <div className="px-4 pt-3 pb-1 text-xs font-medium uppercase tracking-wide text-warning flex items-center justify-between">
+                                      <span>Pending ({pendingEntries.length})</span>
+                                    </div>
+                                    <div className="divide-y">{pendingEntries.map(renderRow)}</div>
+                                  </div>
+                                )}
+                                {paidEntries.length > 0 && (
+                                  <div className="border-t">
+                                    <div className="px-4 pt-3 pb-1 text-xs font-medium uppercase tracking-wide text-success">
+                                      Paid ({paidEntries.length})
+                                    </div>
+                                    <div className="divide-y">{paidEntries.map(renderRow)}</div>
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </CardContent></Card>
-                )}
-              </section>
+                    )}
+                  </section>
+                );
+              })()}
             </>
           )}
         </div>

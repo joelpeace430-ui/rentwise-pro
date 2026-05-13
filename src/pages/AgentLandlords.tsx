@@ -34,10 +34,45 @@ const AgentLandlords = () => {
     const load = async () => {
       if (!user) return;
       setLoading(true);
+
+      // Managed landlords created by this agent
+      const { data: managed } = await supabase
+        .from("managed_landlords" as any)
+        .select("*")
+        .eq("agent_user_id", user.id);
+
+      const managedRows: LandlordRow[] = [];
+      const managedIds = ((managed as any[]) || []).map((m: any) => m.id);
+      let propsByMl: Record<string, string[]> = {};
+      if (managedIds.length) {
+        const { data: mProps } = await supabase
+          .from("properties")
+          .select("id, managed_landlord_id")
+          .in("managed_landlord_id", managedIds);
+        (mProps || []).forEach((p: any) => {
+          (propsByMl[p.managed_landlord_id] = propsByMl[p.managed_landlord_id] || []).push(p.id);
+        });
+      }
+      ((managed as any[]) || []).forEach((m: any) => {
+        managedRows.push({
+          user_id: m.id,
+          is_managed: true,
+          email: m.email,
+          first_name: m.first_name,
+          last_name: m.last_name,
+          phone: m.phone,
+          business_name: m.business_name,
+          property_ids: propsByMl[m.id] || [],
+          property_count: (propsByMl[m.id] || []).length,
+        });
+      });
+
+      // Auth-based landlords (legacy: properties assigned to agent via agent_commissions)
       const { data: comms } = await supabase
         .from("agent_commissions")
         .select("landlord_user_id, property_id")
-        .eq("agent_user_id", user.id);
+        .eq("agent_user_id", user.id)
+        .neq("landlord_user_id", user.id);
 
       const byLandlord: Record<string, string[]> = {};
       (comms || []).forEach((c: any) => {
@@ -45,26 +80,29 @@ const AgentLandlords = () => {
         byLandlord[c.landlord_user_id].push(c.property_id);
       });
       const ids = Object.keys(byLandlord);
-      if (ids.length === 0) { setRows([]); setLoading(false); return; }
+      let authRows: LandlordRow[] = [];
+      if (ids.length) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, email, first_name, last_name, phone, business_name")
+          .in("user_id", ids);
+        authRows = ids.map((uid) => {
+          const p: any = (profiles || []).find((x: any) => x.user_id === uid) || {};
+          return {
+            user_id: uid,
+            is_managed: false,
+            email: p.email || null,
+            first_name: p.first_name || null,
+            last_name: p.last_name || null,
+            phone: p.phone || null,
+            business_name: p.business_name || null,
+            property_count: byLandlord[uid].length,
+            property_ids: byLandlord[uid],
+          };
+        });
+      }
 
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, email, first_name, last_name, phone, business_name")
-        .in("user_id", ids);
-
-      setRows(ids.map((uid) => {
-        const p: any = (profiles || []).find((x: any) => x.user_id === uid) || {};
-        return {
-          user_id: uid,
-          email: p.email || null,
-          first_name: p.first_name || null,
-          last_name: p.last_name || null,
-          phone: p.phone || null,
-          business_name: p.business_name || null,
-          property_count: byLandlord[uid].length,
-          property_ids: byLandlord[uid],
-        };
-      }));
+      setRows([...managedRows, ...authRows]);
       setLoading(false);
     };
     load();

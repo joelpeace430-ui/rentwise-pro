@@ -211,4 +211,25 @@
   .stagger-2 { animation-delay: 0.2s; }
   .stagger-3 { animation-delay: 0.3s; }
   .stagger-4 { animation-delay: 0.4s; }
+
+  /* Liquid Apple Glass */
+  .glass-card {
+    @apply rounded-2xl border border-white/40 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-xl;
+    background: linear-gradient(135deg, hsla(0,0%,100%,0.75) 0%, hsla(210,40%,98%,0.55) 100%);
+  }
+  .dark .glass-card {
+    @apply border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)];
+    background: linear-gradient(135deg, hsla(222,47%,15%,0.65) 0%, hsla(222,47%,11%,0.45) 100%);
+  }
+  .glass-panel {
+    @apply rounded-3xl border border-white/40 backdrop-blur-2xl;
+    background: linear-gradient(135deg, hsla(0,0%,100%,0.55) 0%, hsla(210,40%,96%,0.35) 100%);
+    box-shadow: inset 0 1px 0 hsla(0,0%,100%,0.6), 0 20px 60px -20px hsla(222,47%,11%,0.15);
+  }
+  .glass-bg {
+    background:
+      radial-gradient(1200px 600px at -10% -20%, hsla(43,96%,56%,0.10), transparent 60%),
+      radial-gradient(1000px 500px at 110% 10%, hsla(222,80%,60%,0.10), transparent 60%),
+      radial-gradient(800px 400px at 50% 120%, hsla(142,71%,45%,0.08), transparent 60%);
+  }
 }

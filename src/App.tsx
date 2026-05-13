@@ -29,6 +29,7 @@ import AgentTenants from "./pages/AgentTenants";
 import AgentPayments from "./pages/AgentPayments";
 import AgentLandlords from "./pages/AgentLandlords";
 import AgentCommissions from "./pages/AgentCommissions";
+import AgentOnboard from "./pages/AgentOnboard";
 import PropertyDetail from "./pages/PropertyDetail";
 import Caretakers from "./pages/Caretakers";
 import Landlords from "./pages/Landlords";

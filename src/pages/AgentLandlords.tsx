@@ -3,13 +3,15 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Building2, Users, Mail, Phone, Briefcase } from "lucide-react";
+import { Loader2, ArrowLeft, Building2, Users, Mail, Phone, Briefcase, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/currency";
 
 interface LandlordRow {
-  user_id: string;
+  user_id: string; // synthetic id (managed_landlord id or auth user id)
+  is_managed: boolean;
   email: string | null;
   first_name: string | null;
   last_name: string | null;

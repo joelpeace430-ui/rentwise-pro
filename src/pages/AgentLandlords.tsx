@@ -3,13 +3,15 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Building2, Users, Mail, Phone, Briefcase } from "lucide-react";
+import { Loader2, ArrowLeft, Building2, Users, Mail, Phone, Briefcase, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/currency";
 
 interface LandlordRow {
-  user_id: string;
+  user_id: string; // synthetic id (managed_landlord id or auth user id)
+  is_managed: boolean;
   email: string | null;
   first_name: string | null;
   last_name: string | null;
@@ -32,10 +34,45 @@ const AgentLandlords = () => {
     const load = async () => {
       if (!user) return;
       setLoading(true);
+
+      // Managed landlords created by this agent
+      const { data: managed } = await supabase
+        .from("managed_landlords" as any)
+        .select("*")
+        .eq("agent_user_id", user.id);
+
+      const managedRows: LandlordRow[] = [];
+      const managedIds = ((managed as any[]) || []).map((m: any) => m.id);
+      let propsByMl: Record<string, string[]> = {};
+      if (managedIds.length) {
+        const { data: mProps } = await supabase
+          .from("properties")
+          .select("id, managed_landlord_id")
+          .in("managed_landlord_id", managedIds);
+        (mProps || []).forEach((p: any) => {
+          (propsByMl[p.managed_landlord_id] = propsByMl[p.managed_landlord_id] || []).push(p.id);
+        });
+      }
+      ((managed as any[]) || []).forEach((m: any) => {
+        managedRows.push({
+          user_id: m.id,
+          is_managed: true,
+          email: m.email,
+          first_name: m.first_name,
+          last_name: m.last_name,
+          phone: m.phone,
+          business_name: m.business_name,
+          property_ids: propsByMl[m.id] || [],
+          property_count: (propsByMl[m.id] || []).length,
+        });
+      });
+
+      // Auth-based landlords (legacy: properties assigned to agent via agent_commissions)
       const { data: comms } = await supabase
         .from("agent_commissions")
         .select("landlord_user_id, property_id")
-        .eq("agent_user_id", user.id);
+        .eq("agent_user_id", user.id)
+        .neq("landlord_user_id", user.id);
 
       const byLandlord: Record<string, string[]> = {};
       (comms || []).forEach((c: any) => {
@@ -43,26 +80,29 @@ const AgentLandlords = () => {
         byLandlord[c.landlord_user_id].push(c.property_id);
       });
       const ids = Object.keys(byLandlord);
-      if (ids.length === 0) { setRows([]); setLoading(false); return; }
+      let authRows: LandlordRow[] = [];
+      if (ids.length) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, email, first_name, last_name, phone, business_name")
+          .in("user_id", ids);
+        authRows = ids.map((uid) => {
+          const p: any = (profiles || []).find((x: any) => x.user_id === uid) || {};
+          return {
+            user_id: uid,
+            is_managed: false,
+            email: p.email || null,
+            first_name: p.first_name || null,
+            last_name: p.last_name || null,
+            phone: p.phone || null,
+            business_name: p.business_name || null,
+            property_count: byLandlord[uid].length,
+            property_ids: byLandlord[uid],
+          };
+        });
+      }
 
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, email, first_name, last_name, phone, business_name")
-        .in("user_id", ids);
-
-      setRows(ids.map((uid) => {
-        const p: any = (profiles || []).find((x: any) => x.user_id === uid) || {};
-        return {
-          user_id: uid,
-          email: p.email || null,
-          first_name: p.first_name || null,
-          last_name: p.last_name || null,
-          phone: p.phone || null,
-          business_name: p.business_name || null,
-          property_count: byLandlord[uid].length,
-          property_ids: byLandlord[uid],
-        };
-      }));
+      setRows([...managedRows, ...authRows]);
       setLoading(false);
     };
     load();
@@ -172,32 +212,43 @@ const AgentLandlords = () => {
 
   return (
     <DashboardLayout title="Landlords" subtitle="Landlords whose properties you manage">
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-      ) : rows.length === 0 ? (
-        <Card><CardContent className="py-12 text-center">
-          <Briefcase className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">No landlords yet. You'll see landlords here once you're assigned to their properties.</p>
-        </CardContent></Card>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {rows.map(r => (
-            <Card key={r.user_id} onClick={() => openLandlord(r)} className="cursor-pointer hover:shadow-md transition-shadow">
-              <CardContent className="p-5 space-y-3">
-                <div>
-                  <p className="font-semibold">{displayName(r)}</p>
-                  {r.business_name && <p className="text-xs text-muted-foreground">{r.business_name}</p>}
-                </div>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  {r.email && <div className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" />{r.email}</div>}
-                  {r.phone && <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" />{r.phone}</div>}
-                </div>
-                <Badge variant="secondary"><Building2 className="h-3 w-3 mr-1" />{r.property_count} properties</Badge>
-              </CardContent>
-            </Card>
-          ))}
+      <div className="glass-bg -m-4 sm:-m-6 p-4 sm:p-6 min-h-[calc(100vh-4rem)]">
+        <div className="flex justify-end mb-4">
+          <Link to="/agent/onboard">
+            <Button><Plus className="h-4 w-4 mr-2" />Register landlord</Button>
+          </Link>
         </div>
-      )}
+        {loading ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+        ) : rows.length === 0 ? (
+          <Card className="glass-card border-0"><CardContent className="py-12 text-center">
+            <Briefcase className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground mb-4">No landlords yet. Register your first landlord to get started.</p>
+            <Link to="/agent/onboard"><Button><Plus className="h-4 w-4 mr-2" />Register landlord</Button></Link>
+          </CardContent></Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {rows.map(r => (
+              <Card key={r.user_id} onClick={() => openLandlord(r)} className="glass-card border-0 cursor-pointer hover:scale-[1.01] transition-transform">
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{displayName(r)}</p>
+                      {r.business_name && <p className="text-xs text-muted-foreground truncate">{r.business_name}</p>}
+                    </div>
+                    {r.is_managed && <Badge variant="outline" className="text-[10px] shrink-0">Managed</Badge>}
+                  </div>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    {r.email && <div className="flex items-center gap-2 truncate"><Mail className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{r.email}</span></div>}
+                    {r.phone && <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" />{r.phone}</div>}
+                  </div>
+                  <Badge variant="secondary"><Building2 className="h-3 w-3 mr-1" />{r.property_count} properties</Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </DashboardLayout>
   );
 };

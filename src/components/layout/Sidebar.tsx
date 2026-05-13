@@ -22,6 +22,7 @@ import {
   Briefcase,
   Droplet,
   Coins,
+  UserPlus,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -54,6 +55,7 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
 
   const agentNavigation = [
     { name: "Dashboard", href: "/agent/dashboard", icon: LayoutDashboard, show: true },
+    { name: "Register Landlord", href: "/agent/onboard", icon: UserPlus, show: true },
     { name: "Landlords", href: "/agent/landlords", icon: Briefcase, show: true },
     { name: "Properties", href: "/agent/properties", icon: Building2, show: true },
     { name: "Tenants", href: "/agent/tenants", icon: Users, show: true },

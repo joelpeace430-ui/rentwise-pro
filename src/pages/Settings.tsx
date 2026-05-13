@@ -174,36 +174,32 @@ const Settings = () => {
       subtitle="Manage your account and preferences"
     >
       <Tabs defaultValue="profile" className="max-w-5xl">
-        <TabsList className={`grid w-full mb-6 ${isAdmin() ? 'grid-cols-6' : 'grid-cols-4'}`}>
-          <TabsTrigger value="profile" className="gap-2">
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline">Profile</span>
-          </TabsTrigger>
-          <TabsTrigger value="business" className="gap-2">
-            <Building2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Business</span>
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
-            <Bell className="h-4 w-4" />
-            <span className="hidden sm:inline">Alerts</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
-            <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Security</span>
-          </TabsTrigger>
-          {isAdmin() && (
-            <TabsTrigger value="users" className="gap-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Users</span>
+        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 mb-6">
+          <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 gap-1 p-1 h-auto">
+            <TabsTrigger value="profile" className="gap-2 px-3 py-2">
+              <User className="h-4 w-4" /><span>Profile</span>
             </TabsTrigger>
-          )}
-          {isAdmin() && (
-            <TabsTrigger value="features" className="gap-2">
-              <ToggleRight className="h-4 w-4" />
-              <span className="hidden sm:inline">Features</span>
+            <TabsTrigger value="business" className="gap-2 px-3 py-2">
+              <Building2 className="h-4 w-4" /><span>Business</span>
             </TabsTrigger>
-          )}
-        </TabsList>
+            <TabsTrigger value="notifications" className="gap-2 px-3 py-2">
+              <Bell className="h-4 w-4" /><span>Alerts</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="gap-2 px-3 py-2">
+              <Shield className="h-4 w-4" /><span>Security</span>
+            </TabsTrigger>
+            {isAdmin() && (
+              <TabsTrigger value="users" className="gap-2 px-3 py-2">
+                <Users className="h-4 w-4" /><span>Users</span>
+              </TabsTrigger>
+            )}
+            {isAdmin() && (
+              <TabsTrigger value="features" className="gap-2 px-3 py-2">
+                <ToggleRight className="h-4 w-4" /><span>Features</span>
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </div>
 
         <TabsContent value="profile" className="space-y-6">
           {/* Profile Card */}

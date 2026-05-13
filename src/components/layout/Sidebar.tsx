@@ -22,6 +22,7 @@ import {
   Briefcase,
   Droplet,
   Coins,
+  UserPlus,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {

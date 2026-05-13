@@ -503,6 +503,45 @@ export type Database = {
           },
         ]
       }
+      managed_landlords: {
+        Row: {
+          agent_user_id: string
+          business_name: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string | null
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_user_id: string
+          business_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_user_id?: string
+          business_name?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -727,6 +766,7 @@ export type Database = {
           grace_period_days: number
           id: string
           location: string | null
+          managed_landlord_id: string | null
           name: string
           penalty_rate: number
           penalty_type: string
@@ -742,6 +782,7 @@ export type Database = {
           grace_period_days?: number
           id?: string
           location?: string | null
+          managed_landlord_id?: string | null
           name: string
           penalty_rate?: number
           penalty_type?: string
@@ -757,6 +798,7 @@ export type Database = {
           grace_period_days?: number
           id?: string
           location?: string | null
+          managed_landlord_id?: string | null
           name?: string
           penalty_rate?: number
           penalty_type?: string
@@ -766,7 +808,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "properties_managed_landlord_id_fkey"
+            columns: ["managed_landlord_id"]
+            isOneToOne: false
+            referencedRelation: "managed_landlords"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       receipts: {
         Row: {

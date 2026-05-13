@@ -98,6 +98,10 @@ const App = () => (
                     element={<ProtectedRoute><AgentCommissions /></ProtectedRoute>}
                   />
                   <Route
+                    path="/agent/onboard"
+                    element={<ProtectedRoute><AgentOnboard /></ProtectedRoute>}
+                  />
+                  <Route
                     path="/"
                     element={
                       <ProtectedRoute>

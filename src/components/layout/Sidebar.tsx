@@ -80,8 +80,8 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Tax Center", href: "/tax", icon: Receipt, show: isFeatureEnabled("tax") },
   ];
 
-  // Use agent nav if user is agent-only (not admin/landlord)
-  const isAgentOnly = isAgent() && !isAdmin() && !isLandlord();
+  // Agents get the agent-only nav. Finance/landlord/admin get the landlord nav.
+  const isAgentOnly = isAgent() && !isAdmin() && !isLandlord() && !roles.includes("finance");
   const allNavigation = isAgentOnly ? agentNavigation : landlordNavigation;
 
   const navigation = allNavigation.filter((item) => item.show);

@@ -59,11 +59,8 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Landlords", href: "/agent/landlords", icon: Briefcase, show: true },
     { name: "Properties", href: "/agent/properties", icon: Building2, show: true },
     { name: "Tenants", href: "/agent/tenants", icon: Users, show: true },
-    { name: "Payments", href: "/agent/payments", icon: CreditCard, show: isFeatureEnabled("finance") },
+    { name: "Payments", href: "/agent/payments", icon: CreditCard, show: true },
     { name: "Commissions", href: "/agent/commissions", icon: Coins, show: true },
-    { name: "Expenses", href: "/expenses", icon: Wallet, show: isFeatureEnabled("expenses") },
-    { name: "Reports", href: "/reports", icon: BarChart3, show: isFeatureEnabled("reports") },
-    { name: "Maintenance", href: "/maintenance", icon: Wrench, show: isFeatureEnabled("maintenance") },
   ];
 
   const landlordNavigation = [
@@ -83,8 +80,8 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Tax Center", href: "/tax", icon: Receipt, show: isFeatureEnabled("tax") },
   ];
 
-  // Use agent nav if user is agent-only (not admin/landlord)
-  const isAgentOnly = isAgent() && !isAdmin() && !isLandlord();
+  // Agents get the agent-only nav. Finance/landlord/admin get the landlord nav.
+  const isAgentOnly = isAgent() && !isAdmin() && !isLandlord() && !roles.includes("finance");
   const allNavigation = isAgentOnly ? agentNavigation : landlordNavigation;
 
   const navigation = allNavigation.filter((item) => item.show);

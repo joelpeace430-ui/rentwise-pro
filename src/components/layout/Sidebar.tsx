@@ -80,8 +80,8 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Tax Center", href: "/tax", icon: Receipt, show: isFeatureEnabled("tax") },
   ];
 
-  // Agents get the agent-only nav. Finance/landlord/admin get the landlord nav.
-  const isAgentOnly = isAgent() && !isAdmin() && !isLandlord() && !roles.includes("finance");
+  // Agents (even if they also hold finance) get the agent-only nav. Admin/landlord get the landlord nav.
+  const isAgentOnly = isAgent() && !isAdmin() && !isLandlord();
   const allNavigation = isAgentOnly ? agentNavigation : landlordNavigation;
 
   const navigation = allNavigation.filter((item) => item.show);

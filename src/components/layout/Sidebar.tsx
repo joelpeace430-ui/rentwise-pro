@@ -59,11 +59,8 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Landlords", href: "/agent/landlords", icon: Briefcase, show: true },
     { name: "Properties", href: "/agent/properties", icon: Building2, show: true },
     { name: "Tenants", href: "/agent/tenants", icon: Users, show: true },
-    { name: "Payments", href: "/agent/payments", icon: CreditCard, show: isFeatureEnabled("finance") },
+    { name: "Payments", href: "/agent/payments", icon: CreditCard, show: true },
     { name: "Commissions", href: "/agent/commissions", icon: Coins, show: true },
-    { name: "Expenses", href: "/expenses", icon: Wallet, show: isFeatureEnabled("expenses") },
-    { name: "Reports", href: "/reports", icon: BarChart3, show: isFeatureEnabled("reports") },
-    { name: "Maintenance", href: "/maintenance", icon: Wrench, show: isFeatureEnabled("maintenance") },
   ];
 
   const landlordNavigation = [

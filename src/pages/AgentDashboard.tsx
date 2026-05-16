@@ -23,19 +23,20 @@ const AgentDashboard = () => {
 
   return (
     <DashboardLayout title="Agent Dashboard" subtitle="Overview of your managed properties and earnings.">
-      <div className="space-y-6">
+      <div className="glass-bg -m-4 sm:-m-6 p-4 sm:p-6 min-h-[calc(100vh-4rem)]">
+       <div className="space-y-6">
         {/* Stats */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <StatCard title="Properties Managed" value={String(stats?.totalProperties || 0)} icon={Building2} />
-          <StatCard title="Total Tenants" value={String(stats?.totalTenants || 0)} icon={Users} />
-          <StatCard title="Occupancy Rate" value={`${stats?.occupancyRate || 0}%`} icon={TrendingUp} />
-          <StatCard title="Rent Collected" value={formatCurrency(stats?.totalRentCollected || 0)} icon={DollarSign} variant="accent" />
-          <StatCard title="Commission Earned" value={formatCurrency(stats?.totalCommissionEarned || 0)} icon={Percent} />
-          <StatCard title="Pending Payments" value={String(stats?.pendingPayments || 0)} icon={FileText} />
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+          <StatCard title="Properties" value={String(stats?.totalProperties || 0)} icon={Building2} />
+          <StatCard title="Tenants" value={String(stats?.totalTenants || 0)} icon={Users} />
+          <StatCard title="Occupancy" value={`${stats?.occupancyRate || 0}%`} icon={TrendingUp} />
+          <StatCard title="Collected" value={formatCurrency(stats?.totalRentCollected || 0)} icon={DollarSign} variant="accent" />
+          <StatCard title="Commission" value={formatCurrency(stats?.totalCommissionEarned || 0)} icon={Percent} />
+          <StatCard title="Pending" value={String(stats?.pendingPayments || 0)} icon={FileText} />
         </div>
 
         {properties.length === 0 ? (
-          <Card className="shadow-md">
+          <Card className="glass-card border-0">
             <CardContent className="py-12 text-center">
               <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">No Properties Assigned</h3>

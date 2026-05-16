@@ -28,9 +28,59 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    const { type, messages, tenantId, propertyId, userId }: AIRequest = await req.json();
+    // Require authenticated JWT
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authClient = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: { user }, error: authError } = await authClient.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const authenticatedUserId = user.id;
+
+    const { type, messages, tenantId, propertyId }: AIRequest = await req.json();
+
+    // Ownership checks for tenant/property scoped requests
+    if (tenantId) {
+      const { data: t } = await supabase
+        .from("tenants")
+        .select("user_id")
+        .eq("id", tenantId)
+        .maybeSingle();
+      if (!t || t.user_id !== authenticatedUserId) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+    if (propertyId) {
+      const { data: p } = await supabase
+        .from("properties")
+        .select("user_id")
+        .eq("id", propertyId)
+        .maybeSingle();
+      if (!p || p.user_id !== authenticatedUserId) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     let systemPrompt = "";
     let userPrompt = "";

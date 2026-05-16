@@ -124,13 +124,24 @@ const handler = async (req: Request): Promise<Response> => {
     const authHeader = req.headers.get("Authorization");
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Extract user from JWT
-    let userId: string | null = null;
-    if (authHeader) {
-      const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
-      const { data: { user } } = await anonClient.auth.getUser(authHeader.replace("Bearer ", ""));
-      userId = user?.id || null;
+    // Require JWT
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
+    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const { data: { user }, error: authError } = await anonClient.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+    const userId = user.id;
 
     const { tenantId, messageType, customMessage }: SMSRequest = await req.json();
 
@@ -141,11 +152,12 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Fetch tenant info
+    // Fetch tenant info — enforce ownership
     const { data: tenant, error: tenantError } = await supabase
       .from("tenants")
       .select("*, property:properties(name)")
       .eq("id", tenantId)
+      .eq("user_id", userId)
       .single();
 
     if (tenantError || !tenant) {

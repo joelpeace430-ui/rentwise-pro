@@ -79,60 +79,88 @@ const AgentProperties = () => {
 
   return (
     <DashboardLayout title="Properties" subtitle="Properties assigned to you">
-      <Card className="shadow-md">
-        <CardHeader>
-          <CardTitle className="text-lg">Managed Properties</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {properties.length === 0 ? (
-            <div className="text-center py-12">
-              <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">No properties assigned yet.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Property</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Landlord</TableHead>
-                    <TableHead>Units</TableHead>
-                    <TableHead>Occupancy</TableHead>
-                    <TableHead>Monthly Rent</TableHead>
-                    <TableHead>Commission</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+      <div className="glass-bg -m-4 sm:-m-6 p-4 sm:p-6 min-h-[calc(100vh-4rem)]">
+        <Card className="glass-card border-0">
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Managed Properties</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {properties.length === 0 ? (
+              <div className="text-center py-12">
+                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">No properties assigned yet.</p>
+              </div>
+            ) : (
+              <>
+                {/* Mobile cards */}
+                <div className="grid gap-3 sm:hidden">
                   {properties.map((prop) => (
-                    <TableRow key={prop.id}>
-                      <TableCell className="font-medium">{prop.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{prop.address}</TableCell>
-                      <TableCell>{prop.landlord_name}</TableCell>
-                      <TableCell>{prop.total_units}</TableCell>
-                      <TableCell>
-                        <Badge variant={prop.occupied_units === prop.total_units ? "default" : "secondary"}>
-                          {prop.occupied_units}/{prop.total_units}
+                    <div key={prop.id} className="rounded-xl border border-border/60 bg-background/40 p-4 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-semibold truncate">{prop.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{prop.address}</p>
+                        </div>
+                        <Badge variant={prop.status === "active" ? "default" : "secondary"} className="shrink-0">{prop.status}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">Landlord: {prop.landlord_name}</p>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <Badge variant="secondary">{prop.occupied_units}/{prop.total_units} units</Badge>
+                        <Badge variant="outline">{formatCurrency(prop.monthly_rent)}/mo</Badge>
+                        <Badge variant="outline">
+                          {prop.commission_type === "percentage" ? `${prop.commission_rate}%` : formatCurrency(prop.commission_rate)} comm.
                         </Badge>
-                      </TableCell>
-                      <TableCell>{formatCurrency(prop.monthly_rent)}</TableCell>
-                      <TableCell>
-                        {prop.commission_type === "percentage" ? `${prop.commission_rate}%` : formatCurrency(prop.commission_rate)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={prop.status === "active" ? "default" : "secondary"}>
-                          {prop.status}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Property</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Landlord</TableHead>
+                        <TableHead>Units</TableHead>
+                        <TableHead>Occupancy</TableHead>
+                        <TableHead>Monthly Rent</TableHead>
+                        <TableHead>Commission</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {properties.map((prop) => (
+                        <TableRow key={prop.id}>
+                          <TableCell className="font-medium">{prop.name}</TableCell>
+                          <TableCell className="text-muted-foreground">{prop.address}</TableCell>
+                          <TableCell>{prop.landlord_name}</TableCell>
+                          <TableCell>{prop.total_units}</TableCell>
+                          <TableCell>
+                            <Badge variant={prop.occupied_units === prop.total_units ? "default" : "secondary"}>
+                              {prop.occupied_units}/{prop.total_units}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{formatCurrency(prop.monthly_rent)}</TableCell>
+                          <TableCell>
+                            {prop.commission_type === "percentage" ? `${prop.commission_rate}%` : formatCurrency(prop.commission_rate)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={prop.status === "active" ? "default" : "secondary"}>
+                              {prop.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </DashboardLayout>
   );
 };

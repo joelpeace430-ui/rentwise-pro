@@ -129,7 +129,7 @@ const AgentCommissions = () => {
     const paid = g.entries.filter(e => e.status === "paid");
     return (
       <Card key={g.name} className="glass-card border-0 overflow-hidden">
-        <div className="px-4 py-3 border-b border-border/40 flex items-center justify-between">
+        <div className="px-4 py-3 border-b border-border/40 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             {icon}
             <p className="font-semibold truncate">{g.name}</p>

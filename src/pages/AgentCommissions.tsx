@@ -167,11 +167,13 @@ const AgentCommissions = () => {
             </CardContent></Card>
           ) : (
             <Tabs defaultValue="landlord">
-              <TabsList className="glass-card border-0">
-                <TabsTrigger value="landlord"><Briefcase className="h-4 w-4 mr-1.5" />By landlord</TabsTrigger>
-                <TabsTrigger value="tenant"><User className="h-4 w-4 mr-1.5" />By tenant</TabsTrigger>
-                <TabsTrigger value="all"><Building2 className="h-4 w-4 mr-1.5" />All entries</TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto -mx-1 px-1">
+                <TabsList className="glass-card border-0 w-max">
+                  <TabsTrigger value="landlord"><Briefcase className="h-4 w-4 mr-1.5" />By landlord</TabsTrigger>
+                  <TabsTrigger value="tenant"><User className="h-4 w-4 mr-1.5" />By tenant</TabsTrigger>
+                  <TabsTrigger value="all"><Building2 className="h-4 w-4 mr-1.5" />All entries</TabsTrigger>
+                </TabsList>
+              </div>
               <TabsContent value="landlord" className="space-y-4 mt-4">
                 {byLandlord.map(g => renderGroup(g, <Briefcase className="h-4 w-4 text-primary shrink-0" />))}
               </TabsContent>

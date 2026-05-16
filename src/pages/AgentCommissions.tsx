@@ -129,7 +129,7 @@ const AgentCommissions = () => {
     const paid = g.entries.filter(e => e.status === "paid");
     return (
       <Card key={g.name} className="glass-card border-0 overflow-hidden">
-        <div className="px-4 py-3 border-b border-border/40 flex items-center justify-between">
+        <div className="px-4 py-3 border-b border-border/40 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             {icon}
             <p className="font-semibold truncate">{g.name}</p>
@@ -167,11 +167,13 @@ const AgentCommissions = () => {
             </CardContent></Card>
           ) : (
             <Tabs defaultValue="landlord">
-              <TabsList className="glass-card border-0">
-                <TabsTrigger value="landlord"><Briefcase className="h-4 w-4 mr-1.5" />By landlord</TabsTrigger>
-                <TabsTrigger value="tenant"><User className="h-4 w-4 mr-1.5" />By tenant</TabsTrigger>
-                <TabsTrigger value="all"><Building2 className="h-4 w-4 mr-1.5" />All entries</TabsTrigger>
-              </TabsList>
+              <div className="overflow-x-auto -mx-1 px-1">
+                <TabsList className="glass-card border-0 w-max">
+                  <TabsTrigger value="landlord"><Briefcase className="h-4 w-4 mr-1.5" />By landlord</TabsTrigger>
+                  <TabsTrigger value="tenant"><User className="h-4 w-4 mr-1.5" />By tenant</TabsTrigger>
+                  <TabsTrigger value="all"><Building2 className="h-4 w-4 mr-1.5" />All entries</TabsTrigger>
+                </TabsList>
+              </div>
               <TabsContent value="landlord" className="space-y-4 mt-4">
                 {byLandlord.map(g => renderGroup(g, <Briefcase className="h-4 w-4 text-primary shrink-0" />))}
               </TabsContent>

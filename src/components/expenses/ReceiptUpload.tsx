@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,11 +12,50 @@ interface ReceiptUploadProps {
   disabled?: boolean;
 }
 
+// Resolve a stored value (either a storage path or a legacy public URL) to a short-lived signed URL.
+const resolveSignedUrl = async (value: string): Promise<string | null> => {
+  let path = value;
+  if (value.startsWith("http")) {
+    try {
+      const url = new URL(value);
+      const parts = url.pathname.split("/");
+      const idx = parts.findIndex((p) => p === "expense-receipts");
+      if (idx === -1) return null;
+      path = parts.slice(idx + 1).join("/");
+    } catch {
+      return null;
+    }
+  }
+  const { data, error } = await supabase.storage
+    .from("expense-receipts")
+    .createSignedUrl(path, 3600);
+  if (error) {
+    console.error("Failed to create signed URL", error);
+    return null;
+  }
+  return data.signedUrl;
+};
+
 export const ReceiptUpload = ({ value, onChange, disabled }: ReceiptUploadProps) => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (value) {
+      resolveSignedUrl(value).then((url) => {
+        if (!cancelled) setPreviewUrl(url);
+      });
+    } else {
+      setPreviewUrl(null);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [value]);
 
   const handleUpload = async (file: File) => {
     if (!user?.id) {
@@ -46,11 +85,8 @@ export const ReceiptUpload = ({ value, onChange, disabled }: ReceiptUploadProps)
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("expense-receipts")
-        .getPublicUrl(fileName);
-
-      onChange(publicUrl);
+      // Store the storage path; signed URLs are generated on view.
+      onChange(fileName);
       toast.success("Receipt uploaded successfully");
     } catch (error: any) {
       console.error("Upload error:", error);
@@ -60,16 +96,24 @@ export const ReceiptUpload = ({ value, onChange, disabled }: ReceiptUploadProps)
     }
   };
 
+  const extractPath = (val: string): string | null => {
+    if (!val.startsWith("http")) return val;
+    try {
+      const url = new URL(val);
+      const parts = url.pathname.split("/");
+      const idx = parts.findIndex((p) => p === "expense-receipts");
+      return idx === -1 ? null : parts.slice(idx + 1).join("/");
+    } catch {
+      return null;
+    }
+  };
+
   const handleRemove = async () => {
     if (!value || !user?.id) return;
 
     try {
-      // Extract file path from URL
-      const url = new URL(value);
-      const pathParts = url.pathname.split("/");
-      const bucketIndex = pathParts.findIndex(p => p === "expense-receipts");
-      if (bucketIndex !== -1) {
-        const filePath = pathParts.slice(bucketIndex + 1).join("/");
+      const filePath = extractPath(value);
+      if (filePath) {
         await supabase.storage.from("expense-receipts").remove([filePath]);
       }
       onChange(null);
@@ -98,13 +142,13 @@ export const ReceiptUpload = ({ value, onChange, disabled }: ReceiptUploadProps)
 
   if (value) {
     const isImage = value.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-    
+
     return (
       <div className="space-y-2">
         <div className="relative rounded-lg border border-border overflow-hidden bg-muted/30">
-          {isImage ? (
+          {isImage && previewUrl ? (
             <img
-              src={value}
+              src={previewUrl}
               alt="Receipt"
               className="w-full h-32 object-cover"
             />
@@ -115,15 +159,17 @@ export const ReceiptUpload = ({ value, onChange, disabled }: ReceiptUploadProps)
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
           <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-            <a
-              href={value}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-primary hover:underline flex items-center gap-1"
-            >
-              <ExternalLink className="h-3 w-3" />
-              View full size
-            </a>
+            {previewUrl && (
+              <a
+                href={previewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                <ExternalLink className="h-3 w-3" />
+                View full size
+              </a>
+            )}
             <Button
               type="button"
               variant="destructive"
@@ -164,7 +210,7 @@ export const ReceiptUpload = ({ value, onChange, disabled }: ReceiptUploadProps)
         className="hidden"
         disabled={disabled || uploading}
       />
-      
+
       <div className="flex flex-col items-center justify-center gap-2 text-center">
         {uploading ? (
           <>

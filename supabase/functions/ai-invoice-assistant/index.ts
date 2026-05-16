@@ -29,20 +29,38 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify JWT from authorization header
-    const authHeader = req.headers.get("authorization");
-    let authenticatedUserId: string | null = null;
-    if (authHeader) {
-      const token = authHeader.replace("Bearer ", "");
-      const { data: { user } } = await supabase.auth.getUser(token);
-      authenticatedUserId = user?.id || null;
+    // Require valid JWT — never trust body userId
+    const authHeader = req.headers.get("authorization") || req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const effectiveUserId = user.id;
 
     const body: AIInvoiceRequest = await req.json();
-    const { action, tenantIds, tenantId, messages, userId } = body;
+    const { action, tenantIds, tenantId, messages } = body;
 
-    // Use authenticated user ID if available, fallback to body userId
-    const effectiveUserId = authenticatedUserId || userId;
+    // If tenantIds supplied, verify they all belong to the authenticated user
+    if (tenantIds && tenantIds.length > 0) {
+      const { data: ownedTenants } = await supabase
+        .from("tenants")
+        .select("id")
+        .in("id", tenantIds)
+        .eq("user_id", effectiveUserId);
+      if (!ownedTenants || ownedTenants.length !== tenantIds.length) {
+        return new Response(JSON.stringify({ error: "Forbidden: tenant ownership mismatch" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     if (action === "chat") {
       // AI chat for invoice management assistance

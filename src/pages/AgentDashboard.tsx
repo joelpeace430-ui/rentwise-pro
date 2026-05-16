@@ -46,21 +46,21 @@ const AgentDashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2">
             {/* Properties Overview */}
-            <Card className="shadow-md">
+            <Card className="glass-card border-0">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold">Properties Overview</CardTitle>
+                <CardTitle className="text-base sm:text-lg font-semibold">Properties Overview</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {properties.map((prop) => (
-                  <div key={prop.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{prop.name}</p>
-                      <p className="text-xs text-muted-foreground">{prop.address}</p>
-                      <p className="text-xs text-muted-foreground">Landlord: {prop.landlord_email}</p>
+                  <div key={prop.id} className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{prop.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{prop.address}</p>
+                      <p className="text-xs text-muted-foreground truncate">Landlord: {prop.landlord_email}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <Badge variant="outline">{prop.occupied_units}/{prop.total_units} units</Badge>
                       <p className="text-xs text-muted-foreground mt-1">
                         {prop.commission_type === "percentage" ? `${prop.commission_rate}%` : formatCurrency(prop.commission_rate)} commission
@@ -72,20 +72,20 @@ const AgentDashboard = () => {
             </Card>
 
             {/* Commission Breakdown */}
-            <Card className="shadow-md">
+            <Card className="glass-card border-0">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold">Commission Breakdown</CardTitle>
+                <CardTitle className="text-base sm:text-lg font-semibold">Commission Breakdown</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {commissions.map((c) => (
-                  <div key={c.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{c.property_name}</p>
+                  <div key={c.id} className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{c.property_name}</p>
                       <p className="text-xs text-muted-foreground">
                         Collected: {formatCurrency(c.total_collected)}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <p className="text-sm font-semibold text-foreground">{formatCurrency(c.commission_earned)}</p>
                       <p className="text-xs text-muted-foreground">
                         {c.commission_type === "percentage" ? `${c.commission_rate}%` : "Fixed"}
@@ -97,6 +97,7 @@ const AgentDashboard = () => {
             </Card>
           </div>
         )}
+       </div>
       </div>
     </DashboardLayout>
   );

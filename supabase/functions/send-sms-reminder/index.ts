@@ -77,6 +77,16 @@
    if (req.method === "OPTIONS") {
      return new Response(null, { headers: corsHeaders });
    }
+
+  // Require CRON_SECRET header to prevent unauthenticated invocation
+  const cronSecret = Deno.env.get("CRON_SECRET");
+  const provided = req.headers.get("x-cron-secret");
+  if (!cronSecret || provided !== cronSecret) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
  
    try {
      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

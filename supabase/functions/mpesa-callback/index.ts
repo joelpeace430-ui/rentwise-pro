@@ -32,8 +32,23 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
+
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+
+    // Validate callback authenticity via shared secret in the URL.
+    // Safaricom is configured at registration time with a callback URL containing this token.
+    const callbackSecret = Deno.env.get('MPESA_CALLBACK_SECRET');
+    if (callbackSecret) {
+      const url = new URL(req.url);
+      const provided = url.searchParams.get('secret') || req.headers.get('x-callback-secret');
+      if (provided !== callbackSecret) {
+        console.warn('Rejected M-Pesa callback: invalid or missing secret');
+        return new Response(
+          JSON.stringify({ ResultCode: 1, ResultDesc: 'Unauthorized' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     const callback: MPesaCallback = await req.json();
     const { stkCallback } = callback.Body;
@@ -41,7 +56,7 @@ serve(async (req) => {
     console.log('M-Pesa Callback received:', JSON.stringify(stkCallback, null, 2));
 
     const checkoutRequestId = stkCallback.CheckoutRequestID;
-    
+
     // Find the payment by CheckoutRequestID in notes
     const { data: payments, error: findError } = await supabase
       .from('payments')

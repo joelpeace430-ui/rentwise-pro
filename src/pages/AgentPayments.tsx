@@ -102,68 +102,90 @@ const AgentPayments = () => {
 
   return (
     <DashboardLayout title="Payments & Financials" subtitle="Track rent payments and commissions">
-      <div className="space-y-6">
-        {/* Summary Cards */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card className="shadow-md">
-            <CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">Total Rent Collected</p>
-              <p className="text-2xl font-bold text-foreground">{formatCurrency(commissionSummary.total)}</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-md">
-            <CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">Your Commission</p>
-              <p className="text-2xl font-bold text-foreground">{formatCurrency(commissionSummary.earned)}</p>
+      <div className="glass-bg -m-4 sm:-m-6 p-4 sm:p-6 min-h-[calc(100vh-4rem)]">
+        <div className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+            <Card className="glass-card border-0">
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Total Rent Collected</p>
+                <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{formatCurrency(commissionSummary.total)}</p>
+              </CardContent>
+            </Card>
+            <Card className="glass-card border-0">
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Your Commission</p>
+                <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{formatCurrency(commissionSummary.earned)}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Payment History */}
+          <Card className="glass-card border-0">
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg">Payment History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {payments.length === 0 ? (
+                <div className="text-center py-12">
+                  <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground">No payments found.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Mobile list */}
+                  <div className="grid gap-3 sm:hidden">
+                    {payments.map((p: any) => (
+                      <div key={p.id} className="rounded-xl border border-border/60 bg-background/40 p-4 space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-semibold truncate">{p.tenant_name}</p>
+                          <p className="font-semibold shrink-0">{formatCurrency(Number(p.amount))}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">{p.property_name}</p>
+                        <div className="flex items-center justify-between pt-1 gap-2">
+                          <p className="text-xs text-muted-foreground">{format(new Date(p.payment_date), "MMM d, yyyy")} · {p.payment_method?.replace("_", " ")}</p>
+                          <Badge variant={p.status === "completed" ? "default" : "secondary"} className="capitalize shrink-0">{p.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop table */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Tenant</TableHead>
+                          <TableHead>Property</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Method</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {payments.map((p: any) => (
+                          <TableRow key={p.id}>
+                            <TableCell className="whitespace-nowrap">{format(new Date(p.payment_date), "MMM d, yyyy")}</TableCell>
+                            <TableCell className="font-medium">{p.tenant_name}</TableCell>
+                            <TableCell>{p.property_name}</TableCell>
+                            <TableCell>{formatCurrency(Number(p.amount))}</TableCell>
+                            <TableCell className="capitalize">{p.payment_method?.replace("_", " ")}</TableCell>
+                            <TableCell>
+                              <Badge variant={p.status === "completed" ? "default" : "secondary"} className="capitalize">
+                                {p.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
-
-        {/* Payment History */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="text-lg">Payment History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {payments.length === 0 ? (
-              <div className="text-center py-12">
-                <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">No payments found.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Tenant</TableHead>
-                      <TableHead>Property</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Method</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {payments.map((p: any) => (
-                      <TableRow key={p.id}>
-                        <TableCell>{format(new Date(p.payment_date), "MMM d, yyyy")}</TableCell>
-                        <TableCell className="font-medium">{p.tenant_name}</TableCell>
-                        <TableCell>{p.property_name}</TableCell>
-                        <TableCell>{formatCurrency(Number(p.amount))}</TableCell>
-                        <TableCell className="capitalize">{p.payment_method?.replace("_", " ")}</TableCell>
-                        <TableCell>
-                          <Badge variant={p.status === "completed" ? "default" : "secondary"}>
-                            {p.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   );

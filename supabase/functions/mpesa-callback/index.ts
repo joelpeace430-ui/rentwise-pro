@@ -57,16 +57,6 @@ serve(async (req) => {
 
     const checkoutRequestId = stkCallback.CheckoutRequestID;
 
-    // Defense in depth: only accept callbacks that match an existing pending/processing payment
-    // (already enforced below). Additionally, require an amount match before marking completed.
-
-    const callback: MPesaCallback = await req.json();
-    const { stkCallback } = callback.Body;
-
-    console.log('M-Pesa Callback received:', JSON.stringify(stkCallback, null, 2));
-
-    const checkoutRequestId = stkCallback.CheckoutRequestID;
-    
     // Find the payment by CheckoutRequestID in notes
     const { data: payments, error: findError } = await supabase
       .from('payments')

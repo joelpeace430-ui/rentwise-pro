@@ -148,63 +148,65 @@ const AgentLandlords = () => {
   if (selected) {
     return (
       <DashboardLayout title={displayName(selected)} subtitle={selected.business_name || "Landlord details"}>
-        <div className="space-y-6">
-          <Button variant="outline" size="sm" onClick={() => setSelected(null)}>
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back
-          </Button>
-          {detailLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
-          ) : (
-            <>
-              <section>
-                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2"><Building2 className="h-5 w-5" /> Properties ({properties.length})</h2>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {properties.map(p => {
-                    const propTenants = tenants.filter(t => t.property_id === p.id);
-                    return (
-                      <Card key={p.id}>
-                        <CardContent className="p-4 space-y-2">
-                          <p className="font-semibold">{p.name}</p>
-                          <p className="text-xs text-muted-foreground">{p.address}</p>
-                          <div className="flex gap-2 pt-1">
-                            <Badge variant="secondary">{p.total_units} units</Badge>
-                            <Badge variant="outline">{propTenants.length} tenants</Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </section>
-              <section>
-                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2"><Users className="h-5 w-5" /> Tenants ({tenants.length})</h2>
-                {tenants.length === 0 ? (
-                  <Card><CardContent className="py-8 text-center text-muted-foreground">No tenants.</CardContent></Card>
-                ) : (
-                  <Card><CardContent className="p-0 divide-y">
-                    {tenants.map(t => {
-                      const prop = properties.find(p => p.id === t.property_id);
+        <div className="glass-bg -m-4 sm:-m-6 p-4 sm:p-6 min-h-[calc(100vh-4rem)]">
+          <div className="space-y-6">
+            <Button variant="outline" size="sm" onClick={() => setSelected(null)}>
+              <ArrowLeft className="h-4 w-4 mr-2" /> Back
+            </Button>
+            {detailLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+            ) : (
+              <>
+                <section>
+                  <h2 className="text-base sm:text-lg font-semibold mb-3 flex items-center gap-2"><Building2 className="h-5 w-5" /> Properties ({properties.length})</h2>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {properties.map(p => {
+                      const propTenants = tenants.filter(t => t.property_id === p.id);
                       return (
-                        <div key={t.id} className="flex items-center justify-between gap-4 p-4">
-                          <div className="min-w-0">
-                            <p className="font-medium truncate">{t.first_name} {t.last_name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{prop?.name || "—"} · Unit {t.unit_number} · {t.email}</p>
-                            <p className="text-xs text-muted-foreground mt-1">Last payment: {t._lastPayment ? new Date(t._lastPayment).toLocaleDateString("en-KE") : "—"}</p>
-                          </div>
-                          <div className="flex flex-col items-end gap-1 shrink-0">
-                            <span className={`text-sm font-semibold ${t._balance > 0 ? "text-destructive" : "text-foreground"}`}>
-                              {formatCurrency(Number(t._balance || 0))}
-                            </span>
-                            <Badge variant={t.rent_status === "paid" ? "default" : "secondary"}>{t.rent_status}</Badge>
-                          </div>
-                        </div>
+                        <Card key={p.id} className="glass-card border-0">
+                          <CardContent className="p-4 space-y-2">
+                            <p className="font-semibold truncate">{p.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{p.address}</p>
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              <Badge variant="secondary">{p.total_units} units</Badge>
+                              <Badge variant="outline">{propTenants.length} tenants</Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
                       );
                     })}
-                  </CardContent></Card>
-                )}
-              </section>
-            </>
-          )}
+                  </div>
+                </section>
+                <section>
+                  <h2 className="text-base sm:text-lg font-semibold mb-3 flex items-center gap-2"><Users className="h-5 w-5" /> Tenants ({tenants.length})</h2>
+                  {tenants.length === 0 ? (
+                    <Card className="glass-card border-0"><CardContent className="py-8 text-center text-muted-foreground">No tenants.</CardContent></Card>
+                  ) : (
+                    <Card className="glass-card border-0"><CardContent className="p-0 divide-y divide-border/40">
+                      {tenants.map(t => {
+                        const prop = properties.find(p => p.id === t.property_id);
+                        return (
+                          <div key={t.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium truncate">{t.first_name} {t.last_name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{prop?.name || "—"} · Unit {t.unit_number} · {t.email}</p>
+                              <p className="text-xs text-muted-foreground mt-1">Last payment: {t._lastPayment ? new Date(t._lastPayment).toLocaleDateString("en-KE") : "—"}</p>
+                            </div>
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                              <span className={`text-sm font-semibold ${t._balance > 0 ? "text-destructive" : "text-foreground"}`}>
+                                {formatCurrency(Number(t._balance || 0))}
+                              </span>
+                              <Badge variant={t.rent_status === "paid" ? "default" : "secondary"} className="capitalize">{t.rent_status}</Badge>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </CardContent></Card>
+                  )}
+                </section>
+              </>
+            )}
+          </div>
         </div>
       </DashboardLayout>
     );

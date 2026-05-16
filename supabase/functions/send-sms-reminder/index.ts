@@ -76,8 +76,9 @@
  const handler = async (req: Request): Promise<Response> => {
    if (req.method === "OPTIONS") {
      return new Response(null, { headers: corsHeaders });
+   }
 
-  // Require CRON_SECRET header for all non-OPTIONS calls to prevent unauthenticated invocation
+  // Require CRON_SECRET header to prevent unauthenticated invocation
   const cronSecret = Deno.env.get("CRON_SECRET");
   const provided = req.headers.get("x-cron-secret");
   if (!cronSecret || provided !== cronSecret) {
@@ -86,7 +87,6 @@
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-   }
  
    try {
      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

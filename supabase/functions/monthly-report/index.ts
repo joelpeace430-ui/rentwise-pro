@@ -13,8 +13,9 @@ const formatCurrency = (amount: number) =>
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
 
-  // Require CRON_SECRET header for all non-OPTIONS calls to prevent unauthenticated invocation
+  // Require CRON_SECRET header to prevent unauthenticated invocation
   const cronSecret = Deno.env.get("CRON_SECRET");
   const provided = req.headers.get("x-cron-secret");
   if (!cronSecret || provided !== cronSecret) {
@@ -22,7 +23,6 @@ serve(async (req: Request) => {
       status: 403,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  }
   }
 
   try {

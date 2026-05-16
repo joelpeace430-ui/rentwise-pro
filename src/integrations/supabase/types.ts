@@ -1259,6 +1259,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_invitation_token: {
+        Args: { _token: string }
+        Returns: {
+          expires_at: string
+          id: string
+          tenant_id: string
+          used_at: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "landlord" | "agent" | "caretaker" | "finance"

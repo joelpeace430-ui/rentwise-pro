@@ -77,7 +77,6 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Expenses", href: "/expenses", icon: Wallet, show: isFeatureEnabled("expenses") },
     { name: "Maintenance", href: "/maintenance", icon: Wrench, show: canViewMaintenance() && isFeatureEnabled("maintenance") },
     { name: "Reports", href: "/reports", icon: BarChart3, show: isFeatureEnabled("reports") },
-    { name: "Tax Center", href: "/tax", icon: Receipt, show: isFeatureEnabled("tax") },
   ];
 
   // Agents (even if they also hold finance) get the agent-only nav. Admin/landlord get the landlord nav.

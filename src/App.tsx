@@ -7,7 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TenantAuthProvider } from "@/contexts/TenantAuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import FeatureGate from "@/components/auth/FeatureGate";
+
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";

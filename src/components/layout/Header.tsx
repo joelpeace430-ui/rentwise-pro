@@ -80,6 +80,18 @@ const Header = ({ title, subtitle, onMenuClick }: HeaderProps) => {
 
         {/* Notifications */}
         <NotificationCenter />
+
+        {/* Sign out */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleSignOut}
+          className="h-9 w-9"
+          title="Sign out"
+          aria-label="Sign out"
+        >
+          <LogOut className="h-4 w-4" />
+        </Button>
       </div>
     </header>
   );

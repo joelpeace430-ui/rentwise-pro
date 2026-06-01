@@ -1,4 +1,4 @@
-import { Search, Plus, Menu } from "lucide-react";
+import { Search, Plus, Menu, LogOut } from "lucide-react";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface HeaderProps {
   title: string;
@@ -17,6 +19,14 @@ interface HeaderProps {
 }
 
 const Header = ({ title, subtitle, onMenuClick }: HeaderProps) => {
+  const { signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({ title: "Signed out", description: "You have been successfully signed out." });
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/80 backdrop-blur-xl px-4 sm:px-6">
       <div className="flex items-center gap-3">
@@ -70,6 +80,18 @@ const Header = ({ title, subtitle, onMenuClick }: HeaderProps) => {
 
         {/* Notifications */}
         <NotificationCenter />
+
+        {/* Sign out */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleSignOut}
+          className="h-9 w-9"
+          title="Sign out"
+          aria-label="Sign out"
+        >
+          <LogOut className="h-4 w-4" />
+        </Button>
       </div>
     </header>
   );

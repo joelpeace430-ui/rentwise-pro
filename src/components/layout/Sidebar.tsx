@@ -108,7 +108,7 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
           <Building2 className="h-5 w-5 text-sidebar-primary-foreground" />
         </div>
         <span className="text-lg font-semibold text-sidebar-foreground">
-          RentFlow
+          mumbi est
         </span>
       </div>
 

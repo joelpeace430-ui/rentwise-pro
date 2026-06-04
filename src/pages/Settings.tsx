@@ -21,7 +21,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import UserManagement from "@/components/settings/UserManagement";
 import FeatureToggleManagement from "@/components/settings/FeatureToggleManagement";
-import { ToggleRight } from "lucide-react";
+import { ToggleRight, Smartphone } from "lucide-react";
+import MpesaSettingsTab from "@/components/settings/MpesaSettingsTab";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 

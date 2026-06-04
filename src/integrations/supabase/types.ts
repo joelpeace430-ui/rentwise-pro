@@ -583,6 +583,54 @@ export type Database = {
           },
         ]
       }
+      mpesa_settings: {
+        Row: {
+          callback_secret: string
+          consumer_key: string
+          consumer_secret: string
+          created_at: string
+          environment: string
+          id: string
+          is_active: boolean
+          last_registered_at: string | null
+          passkey: string | null
+          shortcode: string
+          shortcode_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          callback_secret?: string
+          consumer_key: string
+          consumer_secret: string
+          created_at?: string
+          environment?: string
+          id?: string
+          is_active?: boolean
+          last_registered_at?: string | null
+          passkey?: string | null
+          shortcode: string
+          shortcode_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          callback_secret?: string
+          consumer_key?: string
+          consumer_secret?: string
+          created_at?: string
+          environment?: string
+          id?: string
+          is_active?: boolean
+          last_registered_at?: string | null
+          passkey?: string | null
+          shortcode?: string
+          shortcode_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string

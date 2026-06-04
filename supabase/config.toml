@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.tenant-sms-prompts]
 verify_jwt = false
+
+[functions.mpesa-c2b-callback]
+verify_jwt = false

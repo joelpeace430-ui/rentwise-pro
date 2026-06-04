@@ -189,6 +189,9 @@ const Settings = () => {
             <TabsTrigger value="security" className="gap-2 px-3 py-2">
               <Shield className="h-4 w-4" /><span>Security</span>
             </TabsTrigger>
+            <TabsTrigger value="mpesa" className="gap-2 px-3 py-2">
+              <Smartphone className="h-4 w-4" /><span>M-Pesa</span>
+            </TabsTrigger>
             {isAdmin() && (
               <TabsTrigger value="users" className="gap-2 px-3 py-2">
                 <Users className="h-4 w-4" /><span>Users</span>

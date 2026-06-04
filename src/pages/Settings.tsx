@@ -21,7 +21,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import UserManagement from "@/components/settings/UserManagement";
 import FeatureToggleManagement from "@/components/settings/FeatureToggleManagement";
-import { ToggleRight } from "lucide-react";
+import { ToggleRight, Smartphone } from "lucide-react";
+import MpesaSettingsTab from "@/components/settings/MpesaSettingsTab";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -187,6 +188,9 @@ const Settings = () => {
             </TabsTrigger>
             <TabsTrigger value="security" className="gap-2 px-3 py-2">
               <Shield className="h-4 w-4" /><span>Security</span>
+            </TabsTrigger>
+            <TabsTrigger value="mpesa" className="gap-2 px-3 py-2">
+              <Smartphone className="h-4 w-4" /><span>M-Pesa</span>
             </TabsTrigger>
             {isAdmin() && (
               <TabsTrigger value="users" className="gap-2 px-3 py-2">
@@ -575,6 +579,10 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="mpesa">
+          <MpesaSettingsTab />
         </TabsContent>
 
         {isAdmin() && (

@@ -581,6 +581,10 @@ const Settings = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="mpesa">
+          <MpesaSettingsTab />
+        </TabsContent>
+
         {isAdmin() && (
           <TabsContent value="users">
             <UserManagement />

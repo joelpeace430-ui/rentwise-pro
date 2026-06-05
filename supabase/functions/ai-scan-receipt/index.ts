@@ -7,13 +7,16 @@ const corsHeaders = {
 };
 
 const EXPENSE_CATEGORIES = [
-  "Maintenance & Repairs",
-  "Utilities",
+  "Property Maintenance",
+  "Repairs",
   "Insurance",
-  "Property Tax",
+  "Property Taxes",
+  "Utilities",
   "Management Fees",
-  "Marketing",
   "Legal & Professional",
+  "Advertising",
+  "Cleaning",
+  "Landscaping",
   "Supplies",
   "Travel",
   "Other",

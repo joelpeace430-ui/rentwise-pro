@@ -10,6 +10,9 @@ import { useExpenses, EXPENSE_CATEGORIES, CreateExpenseInput, Expense } from "@/
 import { useProperties } from "@/hooks/useProperties";
 import { format } from "date-fns";
 import { ReceiptUpload } from "./ReceiptUpload";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Sparkles, Loader2 } from "lucide-react";
 
 interface ExpenseDialogProps {
   open: boolean;
@@ -34,6 +37,33 @@ export const ExpenseDialog = ({ open, onOpenChange, expense }: ExpenseDialogProp
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [scanning, setScanning] = useState(false);
+
+  const handleScan = async (receiptPath: string) => {
+    setScanning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-scan-receipt", {
+        body: { receiptPath },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setFormData((prev) => ({
+        ...prev,
+        vendor: data.vendor || prev.vendor,
+        amount: data.amount || prev.amount,
+        expense_date: data.expense_date || prev.expense_date,
+        description: data.description || prev.description,
+        category: data.category || prev.category,
+      }));
+      toast.success("Receipt scanned — review and save");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Failed to scan receipt");
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,10 +200,31 @@ export const ExpenseDialog = ({ open, onOpenChange, expense }: ExpenseDialogProp
           </div>
 
           <div className="space-y-2">
-            <Label>Receipt (Optional)</Label>
+            <div className="flex items-center justify-between">
+              <Label>Receipt (Optional)</Label>
+              {formData.receipt_url && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleScan(formData.receipt_url!)}
+                  disabled={scanning || isSubmitting}
+                  className="h-7"
+                >
+                  {scanning ? (
+                    <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Scanning…</>
+                  ) : (
+                    <><Sparkles className="h-3 w-3 mr-1" /> Scan with AI</>
+                  )}
+                </Button>
+              )}
+            </div>
             <ReceiptUpload
               value={formData.receipt_url}
-              onChange={(url) => setFormData({ ...formData, receipt_url: url })}
+              onChange={(url) => {
+                setFormData({ ...formData, receipt_url: url });
+                if (url && !isEditing) handleScan(url);
+              }}
               disabled={isSubmitting}
             />
           </div>

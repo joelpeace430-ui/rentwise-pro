@@ -101,20 +101,30 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Re-fetch tenant with monthly_rent & property_id for expected-amount calc
+    const { data: tenantFull } = await supabase
+      .from("tenants")
+      .select("id, user_id, monthly_rent, property_id")
+      .eq("id", tenant.id)
+      .maybeSingle();
+
     // Auto-match oldest unpaid invoice
     const { data: invoice } = await supabase
       .from("invoices")
-      .select("id")
+      .select("id, amount, due_date")
       .eq("tenant_id", tenant.id)
       .in("status", ["pending", "overdue"])
       .order("due_date", { ascending: true })
       .limit(1)
       .maybeSingle();
 
+    const expectedAmount = Number(invoice?.amount ?? tenantFull?.monthly_rent ?? 0);
+
     const paymentDate = transTime
       ? `${transTime.slice(0,4)}-${transTime.slice(4,6)}-${transTime.slice(6,8)}`
       : new Date().toISOString().slice(0, 10);
 
+    // Insert payment
     const { data: payment, error: payErr } = await supabase
       .from("payments")
       .insert({
@@ -132,9 +142,76 @@ Deno.serve(async (req) => {
 
     if (payErr) {
       console.error("Insert payment failed:", payErr);
-    } else if (invoice) {
-      await supabase.from("invoices").update({ status: "paid" }).eq("id", invoice.id);
-      await supabase.from("tenants").update({ rent_status: "paid" }).eq("id", tenant.id);
+    } else {
+      // Reconcile: sum all completed payments against the expected amount
+      let totalPaid = amount;
+      if (invoice) {
+        const { data: allPayments } = await supabase
+          .from("payments")
+          .select("amount")
+          .eq("invoice_id", invoice.id)
+          .eq("status", "completed");
+        totalPaid = (allPayments || []).reduce((s, p) => s + Number(p.amount), 0);
+      }
+
+      const balance = expectedAmount - totalPaid;
+      const fullyPaid = expectedAmount > 0 && balance <= 0;
+      const partial = expectedAmount > 0 && totalPaid > 0 && balance > 0;
+
+      console.log(`Reconcile: expected=${expectedAmount} paid=${totalPaid} balance=${balance} fully=${fullyPaid} partial=${partial}`);
+
+      // Update invoice + tenant status
+      if (invoice && fullyPaid) {
+        await supabase.from("invoices").update({ status: "paid" }).eq("id", invoice.id);
+      }
+      await supabase
+        .from("tenants")
+        .update({ rent_status: fullyPaid ? "paid" : "pending" })
+        .eq("id", tenant.id);
+
+      // Track debt: upsert tenant_debts for the current month
+      if (tenantFull?.property_id && expectedAmount > 0) {
+        const monthYear = (invoice?.due_date || paymentDate).slice(0, 7); // YYYY-MM
+        const dueDate = invoice?.due_date || paymentDate;
+
+        // Look for existing debt row for this month
+        const { data: existingDebt } = await supabase
+          .from("tenant_debts")
+          .select("id, amount_paid, penalty_amount, rent_amount")
+          .eq("tenant_id", tenant.id)
+          .eq("month_year", monthYear)
+          .maybeSingle();
+
+        if (existingDebt) {
+          const newPaid = Number(existingDebt.amount_paid) + amount;
+          const newTotalOwed = Math.max(
+            0,
+            Number(existingDebt.rent_amount) + Number(existingDebt.penalty_amount) - newPaid
+          );
+          await supabase
+            .from("tenant_debts")
+            .update({
+              amount_paid: newPaid,
+              total_owed: newTotalOwed,
+              status: newTotalOwed <= 0 ? "paid" : "partial",
+            })
+            .eq("id", existingDebt.id);
+        } else if (!fullyPaid) {
+          // Only create a debt row when there's an outstanding balance
+          await supabase.from("tenant_debts").insert({
+            user_id: settings.user_id,
+            tenant_id: tenant.id,
+            property_id: tenantFull.property_id,
+            month_year: monthYear,
+            due_date: dueDate,
+            rent_amount: expectedAmount,
+            amount_paid: amount,
+            total_owed: Math.max(0, expectedAmount - amount),
+            status: "partial",
+            notes: `Auto-created from M-Pesa C2B ${transId}`,
+          });
+        }
+      }
     }
 
     if (payment) {

@@ -216,7 +216,18 @@ Deno.serve(async (req) => {
 
     if (payment) {
       try {
-        await supabase.functions.invoke("generate-receipt", { body: { paymentId: payment.id } });
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const fnUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/generate-receipt`;
+        const r = await fetch(fnUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${serviceKey}`,
+            apikey: serviceKey,
+          },
+          body: JSON.stringify({ paymentId: payment.id }),
+        });
+        console.log(`generate-receipt status=${r.status} body=${await r.text()}`);
       } catch (e) {
         console.error("Receipt generation failed:", e);
       }

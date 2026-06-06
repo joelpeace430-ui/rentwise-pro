@@ -78,21 +78,26 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Require JWT
+    // Require JWT (allow internal service-role calls from other edge functions)
     const authHeader = req.headers.get("authorization") || req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const authClient = createClient(supabaseUrl, supabaseAnonKey);
-    const { data: { user }, error: authError } = await authClient.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const bearer = authHeader.replace("Bearer ", "").trim();
+    const isInternal = bearer === supabaseServiceKey;
+
+    let callerUserId: string | null = null;
+    if (!isInternal) {
+      const authClient = createClient(supabaseUrl, supabaseAnonKey);
+      const { data: { user }, error: authError } = await authClient.auth.getUser(bearer);
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      callerUserId = user.id;
     }
 
     const { paymentId }: ReceiptRequest = await req.json();
@@ -121,8 +126,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Payment not found");
     }
 
-    // Ownership check
-    if (payment.user_id !== user.id) {
+    // Ownership check (skipped for internal service-role invocations)
+    if (!isInternal && payment.user_id !== callerUserId) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

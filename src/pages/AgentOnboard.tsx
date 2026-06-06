@@ -56,6 +56,73 @@ const AgentOnboard = () => {
   const updateTenant = (i: number, k: keyof TenantDraft, v: string) =>
     setTenants(tenants.map((t, idx) => (idx === i ? { ...t, [k]: v } : t)));
 
+  // AI document scan
+  const scanFileRef = useRef<HTMLInputElement>(null);
+  const [scanning, setScanning] = useState(false);
+
+  const fileToDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleScanFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please upload a file under 15MB.", variant: "destructive" });
+      return;
+    }
+    setScanning(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const { data, error } = await supabase.functions.invoke("ai-scan-onboarding", {
+        body: { fileDataUrl: dataUrl, mimeType: file.type },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const ll = data.landlord || {};
+      const pr = data.property || {};
+      const ts: any[] = Array.isArray(data.tenants) ? data.tenants : [];
+
+      if (ll.first_name) setLlFirst(ll.first_name);
+      if (ll.last_name) setLlLast(ll.last_name);
+      if (ll.email) setLlEmail(ll.email);
+      if (ll.phone) setLlPhone(ll.phone);
+      if (ll.business_name) setLlBusiness(ll.business_name);
+
+      if (pr.name) setPropName(pr.name);
+      if (pr.address) setPropAddress(pr.address);
+      if (pr.location) setPropLocation(pr.location);
+      if (pr.total_units) setPropUnits(String(pr.total_units));
+      if (pr.rent_per_unit) setPropRent(String(pr.rent_per_unit));
+
+      if (ts.length > 0) {
+        setTenants(ts.map(t => ({
+          first_name: t.first_name || "",
+          last_name: t.last_name || "",
+          email: t.email || "",
+          phone: t.phone || "",
+          unit_number: t.unit_number || "",
+          monthly_rent: t.monthly_rent ? String(t.monthly_rent) : "",
+        })));
+      }
+
+      toast({
+        title: "Document scanned",
+        description: `Extracted ${ts.length} tenant(s). Please review the fields before saving.`,
+      });
+    } catch (err: any) {
+      toast({ title: "Scan failed", description: err.message || "Could not read the document.", variant: "destructive" });
+    } finally {
+      setScanning(false);
+      if (scanFileRef.current) scanFileRef.current.value = "";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;

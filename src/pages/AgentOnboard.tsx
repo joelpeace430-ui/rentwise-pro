@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Plus, Trash2, Briefcase, Building2, Users, Sparkles, ArrowRight, Percent } from "lucide-react";
+import { Loader2, Plus, Trash2, Briefcase, Building2, Users, Sparkles, ArrowRight, Percent, ScanLine, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -55,6 +55,73 @@ const AgentOnboard = () => {
   const removeTenant = (i: number) => setTenants(tenants.filter((_, idx) => idx !== i));
   const updateTenant = (i: number, k: keyof TenantDraft, v: string) =>
     setTenants(tenants.map((t, idx) => (idx === i ? { ...t, [k]: v } : t)));
+
+  // AI document scan
+  const scanFileRef = useRef<HTMLInputElement>(null);
+  const [scanning, setScanning] = useState(false);
+
+  const fileToDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleScanFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please upload a file under 15MB.", variant: "destructive" });
+      return;
+    }
+    setScanning(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const { data, error } = await supabase.functions.invoke("ai-scan-onboarding", {
+        body: { fileDataUrl: dataUrl, mimeType: file.type },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const ll = data.landlord || {};
+      const pr = data.property || {};
+      const ts: any[] = Array.isArray(data.tenants) ? data.tenants : [];
+
+      if (ll.first_name) setLlFirst(ll.first_name);
+      if (ll.last_name) setLlLast(ll.last_name);
+      if (ll.email) setLlEmail(ll.email);
+      if (ll.phone) setLlPhone(ll.phone);
+      if (ll.business_name) setLlBusiness(ll.business_name);
+
+      if (pr.name) setPropName(pr.name);
+      if (pr.address) setPropAddress(pr.address);
+      if (pr.location) setPropLocation(pr.location);
+      if (pr.total_units) setPropUnits(String(pr.total_units));
+      if (pr.rent_per_unit) setPropRent(String(pr.rent_per_unit));
+
+      if (ts.length > 0) {
+        setTenants(ts.map(t => ({
+          first_name: t.first_name || "",
+          last_name: t.last_name || "",
+          email: t.email || "",
+          phone: t.phone || "",
+          unit_number: t.unit_number || "",
+          monthly_rent: t.monthly_rent ? String(t.monthly_rent) : "",
+        })));
+      }
+
+      toast({
+        title: "Document scanned",
+        description: `Extracted ${ts.length} tenant(s). Please review the fields before saving.`,
+      });
+    } catch (err: any) {
+      toast({ title: "Scan failed", description: err.message || "Could not read the document.", variant: "destructive" });
+    } finally {
+      setScanning(false);
+      if (scanFileRef.current) scanFileRef.current.value = "";
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,6 +210,44 @@ const AgentOnboard = () => {
     <DashboardLayout title="Register Landlord" subtitle="Onboard a landlord, property and tenants in one step">
       <div className="glass-bg -m-4 sm:-m-6 p-4 sm:p-6 min-h-[calc(100vh-4rem)]">
         <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
+          {/* AI Document Scan */}
+          <Card className="glass-card border-0 border-l-4 border-l-primary">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ScanLine className="h-5 w-5 text-primary" /> Scan a document with AI
+              </CardTitle>
+              <CardDescription>
+                Upload a lease, tenancy schedule, rent roll, ID or any photo/PDF. AI will extract the landlord,
+                property and tenants and fill the form below. You can still edit anything before saving — or skip this and fill manually.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <input
+                ref={scanFileRef}
+                type="file"
+                className="hidden"
+                accept="image/*,application/pdf"
+                onChange={handleScanFile}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => scanFileRef.current?.click()}
+                disabled={scanning}
+                className="w-full sm:w-auto"
+              >
+                {scanning ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Scanning document…</>
+                ) : (
+                  <><Upload className="h-4 w-4 mr-2" /> Upload document to auto-fill</>
+                )}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Supports images and PDFs up to 15MB. Always review extracted fields before submitting.
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Landlord */}
           <Card className="glass-card border-0">
             <CardHeader>

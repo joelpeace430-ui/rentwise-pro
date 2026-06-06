@@ -210,6 +210,44 @@ const AgentOnboard = () => {
     <DashboardLayout title="Register Landlord" subtitle="Onboard a landlord, property and tenants in one step">
       <div className="glass-bg -m-4 sm:-m-6 p-4 sm:p-6 min-h-[calc(100vh-4rem)]">
         <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
+          {/* AI Document Scan */}
+          <Card className="glass-card border-0 border-l-4 border-l-primary">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ScanLine className="h-5 w-5 text-primary" /> Scan a document with AI
+              </CardTitle>
+              <CardDescription>
+                Upload a lease, tenancy schedule, rent roll, ID or any photo/PDF. AI will extract the landlord,
+                property and tenants and fill the form below. You can still edit anything before saving — or skip this and fill manually.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <input
+                ref={scanFileRef}
+                type="file"
+                className="hidden"
+                accept="image/*,application/pdf"
+                onChange={handleScanFile}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => scanFileRef.current?.click()}
+                disabled={scanning}
+                className="w-full sm:w-auto"
+              >
+                {scanning ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Scanning document…</>
+                ) : (
+                  <><Upload className="h-4 w-4 mr-2" /> Upload document to auto-fill</>
+                )}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Supports images and PDFs up to 15MB. Always review extracted fields before submitting.
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Landlord */}
           <Card className="glass-card border-0">
             <CardHeader>

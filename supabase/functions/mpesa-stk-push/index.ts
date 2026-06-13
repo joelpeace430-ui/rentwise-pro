@@ -57,13 +57,50 @@ serve(async (req) => {
       );
     }
 
-    const { phoneNumber, amount, tenantId, invoiceId, accountReference }: STKPushRequest = await req.json();
+    const { amount, tenantId, invoiceId, accountReference }: STKPushRequest = await req.json();
 
-    // Validate phone number (Kenyan format)
-    const formattedPhone = formatPhoneNumber(phoneNumber);
+    if (!tenantId || typeof tenantId !== 'string' || !amount || amount <= 0) {
+      return new Response(
+        JSON.stringify({ error: 'tenantId and positive amount are required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify tenant belongs to the authenticated user and fetch trusted phone
+    const { data: tenant, error: tenantErr } = await supabase
+      .from('tenants')
+      .select('id, phone, user_id')
+      .eq('id', tenantId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (tenantErr || !tenant) {
+      return new Response(
+        JSON.stringify({ error: 'Tenant not found or access denied' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify invoice ownership if provided
+    if (invoiceId) {
+      const { data: inv } = await supabase
+        .from('invoices')
+        .select('id')
+        .eq('id', invoiceId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!inv) {
+        return new Response(
+          JSON.stringify({ error: 'Invoice not found or access denied' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // Use tenant's stored phone — never trust caller-supplied number
+    const formattedPhone = formatPhoneNumber(tenant.phone || '');
     if (!formattedPhone) {
       return new Response(
-        JSON.stringify({ error: 'Invalid phone number. Use format 254XXXXXXXXX' }),
+        JSON.stringify({ error: 'Tenant has no valid Kenyan phone number on file' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

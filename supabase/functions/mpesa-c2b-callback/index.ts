@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
             0,
             Number(existingDebt.rent_amount) + Number(existingDebt.penalty_amount) - newPaid
           );
-          await supabase
+          const { error: updErr } = await supabase
             .from("tenant_debts")
             .update({
               amount_paid: newPaid,
@@ -196,9 +196,10 @@ Deno.serve(async (req) => {
               status: newTotalOwed <= 0 ? "paid" : "partial",
             })
             .eq("id", existingDebt.id);
+          if (updErr) console.error("tenant_debts update failed:", updErr);
         } else if (!fullyPaid) {
           // Only create a debt row when there's an outstanding balance
-          await supabase.from("tenant_debts").insert({
+          const { error: insErr } = await supabase.from("tenant_debts").insert({
             user_id: settings.user_id,
             tenant_id: tenant.id,
             property_id: tenantFull.property_id,
@@ -210,6 +211,7 @@ Deno.serve(async (req) => {
             status: "partial",
             notes: `Auto-created from M-Pesa C2B ${transId}`,
           });
+          if (insErr) console.error("tenant_debts insert failed:", insErr);
         }
       }
     }

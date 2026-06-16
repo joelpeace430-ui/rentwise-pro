@@ -132,6 +132,9 @@ const handler = async (req: Request): Promise<Response> => {
       // If everything is cleared, nothing more to do for this tenant
       if (fullyCleared) continue;
 
+      // Don't double-apply penalty
+      if (existingDebt.penalty_applied_at) continue;
+
       const gracePeriodDays = property.grace_period_days || 7;
       const dueDateObj = new Date(existingDebt.due_date);
       const daysSinceDue = Math.floor((today.getTime() - dueDateObj.getTime()) / (1000 * 60 * 60 * 24));

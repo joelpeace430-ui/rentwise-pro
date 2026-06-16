@@ -107,18 +107,33 @@ const handler = async (req: Request): Promise<Response> => {
         continue;
       }
 
-      // Update amount paid
+      // Recompute paid + total_owed (rent + locked penalty - paid)
+      const lockedPenalty = Number(existingDebt.penalty_amount || 0);
+      const totalDue = rentOwed + lockedPenalty;
+      const newTotalOwed = Math.max(0, totalDue - totalPaid);
+      const fullyCleared = newTotalOwed <= 0;
+      const nextStatus = fullyCleared
+        ? "paid"
+        : lockedPenalty > 0
+          ? "overdue"
+          : totalPaid > 0
+            ? "partial"
+            : existingDebt.status || "unpaid";
+
       await supabase
         .from("tenant_debts")
         .update({
           amount_paid: totalPaid,
-          status: outstanding <= 0 ? "paid" : existingDebt.status,
+          total_owed: newTotalOwed,
+          status: nextStatus,
         })
         .eq("id", existingDebt.id);
 
-      // Check if penalty should be applied
-      if (outstanding <= 0) continue; // Fully paid
-      if (existingDebt.penalty_applied_at) continue; // Penalty already applied
+      // If everything is cleared, nothing more to do for this tenant
+      if (fullyCleared) continue;
+
+      // Don't double-apply penalty
+      if (existingDebt.penalty_applied_at) continue;
 
       const gracePeriodDays = property.grace_period_days || 7;
       const dueDateObj = new Date(existingDebt.due_date);

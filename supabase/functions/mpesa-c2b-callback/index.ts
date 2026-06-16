@@ -143,8 +143,16 @@ Deno.serve(async (req) => {
     if (payErr) {
       console.error("Insert payment failed:", payErr);
     } else {
-      // Reconcile: sum all completed payments against the expected amount
-      let totalPaid = amount;
+      // Determine reconciliation window (the month the payment belongs to)
+      const monthYear = (invoice?.due_date || paymentDate).slice(0, 7); // YYYY-MM
+      const dueDate = invoice?.due_date || paymentDate;
+      const monthStart = `${monthYear}-01`;
+      const [yy, mm] = monthYear.split("-").map(Number);
+      const nextMonth = new Date(yy, mm, 1).toISOString().slice(0, 10);
+
+      // Always recompute totalPaid from the source-of-truth payments table to avoid
+      // double-counting (cron + callback both updating amount_paid).
+      let totalPaid = 0;
       if (invoice) {
         const { data: allPayments } = await supabase
           .from("payments")
@@ -152,15 +160,41 @@ Deno.serve(async (req) => {
           .eq("invoice_id", invoice.id)
           .eq("status", "completed");
         totalPaid = (allPayments || []).reduce((s, p) => s + Number(p.amount), 0);
+      } else {
+        const { data: monthPayments } = await supabase
+          .from("payments")
+          .select("amount")
+          .eq("tenant_id", tenant.id)
+          .eq("status", "completed")
+          .gte("payment_date", monthStart)
+          .lt("payment_date", nextMonth);
+        totalPaid = (monthPayments || []).reduce((s, p) => s + Number(p.amount), 0);
       }
 
-      const balance = expectedAmount - totalPaid;
-      const fullyPaid = expectedAmount > 0 && balance <= 0;
-      const partial = expectedAmount > 0 && totalPaid > 0 && balance > 0;
+      // Look for existing debt row for this month BEFORE judging fullyPaid,
+      // because any locked-in penalty must also be cleared.
+      let existingDebt: any = null;
+      if (tenantFull?.property_id && expectedAmount > 0) {
+        const { data } = await supabase
+          .from("tenant_debts")
+          .select("id, amount_paid, penalty_amount, rent_amount, status, penalty_applied_at")
+          .eq("tenant_id", tenant.id)
+          .eq("month_year", monthYear)
+          .maybeSingle();
+        existingDebt = data;
+      }
 
-      console.log(`Reconcile: expected=${expectedAmount} paid=${totalPaid} balance=${balance} fully=${fullyPaid} partial=${partial}`);
+      const lockedPenalty = Number(existingDebt?.penalty_amount ?? 0);
+      const totalDue = expectedAmount + lockedPenalty;
+      const balance = totalDue - totalPaid;
+      const fullyPaid = totalDue > 0 && balance <= 0;
+      const hadPenalty = lockedPenalty > 0;
 
-      // Update invoice + tenant status
+      console.log(
+        `Reconcile: expected=${expectedAmount} penalty=${lockedPenalty} paid=${totalPaid} balance=${balance} fully=${fullyPaid}`,
+      );
+
+      // Invoice is only "paid" when rent + any penalty is cleared
       if (invoice && fullyPaid) {
         await supabase.from("invoices").update({ status: "paid" }).eq("id", invoice.id);
       }
@@ -169,36 +203,26 @@ Deno.serve(async (req) => {
         .update({ rent_status: fullyPaid ? "paid" : "pending" })
         .eq("id", tenant.id);
 
-      // Track debt: upsert tenant_debts for the current month
+      // Upsert tenant_debts for the month
       if (tenantFull?.property_id && expectedAmount > 0) {
-        const monthYear = (invoice?.due_date || paymentDate).slice(0, 7); // YYYY-MM
-        const dueDate = invoice?.due_date || paymentDate;
-
-        // Look for existing debt row for this month
-        const { data: existingDebt } = await supabase
-          .from("tenant_debts")
-          .select("id, amount_paid, penalty_amount, rent_amount")
-          .eq("tenant_id", tenant.id)
-          .eq("month_year", monthYear)
-          .maybeSingle();
-
         if (existingDebt) {
-          const newPaid = Number(existingDebt.amount_paid) + amount;
-          const newTotalOwed = Math.max(
-            0,
-            Number(existingDebt.rent_amount) + Number(existingDebt.penalty_amount) - newPaid
-          );
+          // Preserve "overdue" marker if a penalty was applied and balance remains
+          const nextStatus = fullyPaid
+            ? "paid"
+            : hadPenalty
+              ? "overdue"
+              : "partial";
+
           const { error: updErr } = await supabase
             .from("tenant_debts")
             .update({
-              amount_paid: newPaid,
-              total_owed: newTotalOwed,
-              status: newTotalOwed <= 0 ? "paid" : "partial",
+              amount_paid: totalPaid,
+              total_owed: Math.max(0, balance),
+              status: nextStatus,
             })
             .eq("id", existingDebt.id);
           if (updErr) console.error("tenant_debts update failed:", updErr);
         } else if (!fullyPaid) {
-          // Only create a debt row when there's an outstanding balance
           const { error: insErr } = await supabase.from("tenant_debts").insert({
             user_id: settings.user_id,
             tenant_id: tenant.id,
@@ -206,8 +230,8 @@ Deno.serve(async (req) => {
             month_year: monthYear,
             due_date: dueDate,
             rent_amount: expectedAmount,
-            amount_paid: amount,
-            total_owed: Math.max(0, expectedAmount - amount),
+            amount_paid: totalPaid,
+            total_owed: Math.max(0, balance),
             status: "partial",
             notes: `Auto-created from M-Pesa C2B ${transId}`,
           });

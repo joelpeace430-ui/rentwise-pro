@@ -118,15 +118,16 @@ Deno.serve(async (req) => {
 
       // Pre-lock penalty if scenario requires (simulate calculate-penalties already ran).
       if (sc.penaltyLocked > 0) {
-        await supabase.from("tenant_debts").insert({
+        const { error: dErr } = await supabase.from("tenant_debts").insert({
           user_id: landlordId, tenant_id: tenant.id, property_id: prop.id,
-          month_year: monthYear,
-          rent_owed: sc.rent, amount_paid: 0,
+          month_year: monthYear, due_date: dueDate,
+          rent_amount: sc.rent, amount_paid: 0,
           penalty_amount: sc.penaltyLocked,
           penalty_applied_at: new Date().toISOString(),
           total_owed: sc.rent + sc.penaltyLocked,
           status: "overdue",
         } as any);
+        if (dErr) throw dErr;
       }
 
       seeds.push({

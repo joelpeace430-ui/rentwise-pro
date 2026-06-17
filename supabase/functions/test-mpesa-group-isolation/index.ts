@@ -157,43 +157,45 @@ Deno.serve(async (req) => {
 
     // ---- Per-tenant assertions ----
     for (const s of seeds) {
-      const { scenario: sc, tenantId, invoiceId, label = sc.label } = s as any;
+      const { scenario: sc, tenantId, invoiceId } = s;
       const prefix = `[${sc.label} ${tenantId.slice(0, 8)}]`;
+      const fullyPaid = sc.paid >= sc.rent + sc.penaltyLocked;
 
-      // Payments isolation: exactly 1 payment for this tenant, with our TransID.
+      // Payments isolation: exactly 1 payment for this tenant, with our TransID in notes.
       const { data: pays } = await supabase.from("payments")
-        .select("id, amount, transaction_id").eq("tenant_id", tenantId);
+        .select("id, amount, notes").eq("tenant_id", tenantId);
       push(`${prefix} exactly 1 payment recorded`,
         (pays?.length ?? 0) === 1 &&
           Number(pays?.[0]?.amount) === sc.paid &&
-          pays?.[0]?.transaction_id === s.transId,
+          String(pays?.[0]?.notes ?? "").includes(s.transId),
         pays);
 
-      // Debt row: exactly 1 for this tenant+month.
+      // Debt row: 0 when fully paid (no debt persisted), exactly 1 otherwise.
       const { data: debts } = await supabase.from("tenant_debts")
         .select("*").eq("tenant_id", tenantId).eq("month_year", monthYear);
-      push(`${prefix} exactly 1 debt row`,
-        (debts?.length ?? 0) === 1, { count: debts?.length });
+      const expectedDebtRows = fullyPaid && sc.penaltyLocked === 0 ? 0 : 1;
+      push(`${prefix} debt rows = ${expectedDebtRows}`,
+        (debts?.length ?? 0) === expectedDebtRows, { count: debts?.length });
 
-      const debt = debts?.[0];
-      const totalDue = sc.rent + sc.penaltyLocked;
-      const expectedOwed = Math.max(0, totalDue - sc.paid);
-      push(`${prefix} debt.total_owed correct`,
-        !!debt && Number(debt.total_owed) === expectedOwed,
-        { expected: expectedOwed, got: debt?.total_owed });
+      if (expectedDebtRows === 1) {
+        const debt = debts?.[0];
+        const expectedOwed = Math.max(0, sc.rent + sc.penaltyLocked - sc.paid);
+        push(`${prefix} debt.total_owed correct`,
+          !!debt && Number(debt.total_owed) === expectedOwed,
+          { expected: expectedOwed, got: debt?.total_owed });
 
-      push(`${prefix} debt.status=${sc.expectFinalStatus}`,
-        debt?.status === sc.expectFinalStatus,
-        { got: debt?.status });
+        push(`${prefix} debt.status=${sc.expectFinalStatus}`,
+          debt?.status === sc.expectFinalStatus, { got: debt?.status });
 
-      push(`${prefix} penalty not double-recorded`,
-        Number(debt?.penalty_amount ?? 0) === sc.penaltyLocked,
-        { expected: sc.penaltyLocked, got: debt?.penalty_amount });
+        push(`${prefix} penalty not double-recorded`,
+          Number(debt?.penalty_amount ?? 0) === sc.penaltyLocked,
+          { expected: sc.penaltyLocked, got: debt?.penalty_amount });
+      }
 
-      // Invoice status
+      // Invoice status: paid when rent covered (callback marks paid even if overpay).
       const { data: inv } = await supabase.from("invoices")
         .select("status").eq("id", invoiceId).maybeSingle();
-      const expectedInvStatus = sc.paid >= sc.rent ? "paid" : "pending";
+      const expectedInvStatus = fullyPaid ? "paid" : "pending";
       push(`${prefix} invoice.status=${expectedInvStatus}`,
         inv?.status === expectedInvStatus, inv);
     }

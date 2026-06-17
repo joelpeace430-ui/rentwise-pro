@@ -215,7 +215,11 @@ Deno.serve(async (req) => {
     const debtByTenant = new Map<string, number>();
     for (const d of allDebts ?? []) debtByTenant.set(d.tenant_id, (debtByTenant.get(d.tenant_id) ?? 0) + 1);
     push("no duplicate debt rows across tenants",
-      tenantIds.every((id) => debtByTenant.get(id) === 1),
+      seeds.every((s) => {
+        const expected = s.scenario.paid >= s.scenario.rent + s.scenario.penaltyLocked
+          && s.scenario.penaltyLocked === 0 ? 0 : 1;
+        return (debtByTenant.get(s.tenantId) ?? 0) === expected;
+      }),
       Object.fromEntries(debtByTenant));
   } catch (e) {
     push("error during test", false, String(e));

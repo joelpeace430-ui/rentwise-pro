@@ -35,13 +35,18 @@ const Auth = () => {
   const [selectedRole, setSelectedRole] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Preserve a same-origin `next` path (e.g. the OAuth consent URL) across sign-in flows.
+  const rawNext = new URLSearchParams(location.search).get("next");
+  const nextPath =
+    rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : null;
+
   // Redirect if already logged in
   useEffect(() => {
     if (user && !authLoading) {
-      const from = location.state?.from?.pathname || "/";
+      const from = nextPath || location.state?.from?.pathname || "/";
       navigate(from, { replace: true });
     }
-  }, [user, authLoading, navigate, location]);
+  }, [user, authLoading, navigate, location, nextPath]);
 
   const validateLoginForm = () => {
     const newErrors: Record<string, string> = {};
@@ -154,7 +159,7 @@ const Auth = () => {
       email: signupEmail,
       password: signupPassword,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}${nextPath ?? "/"}`,
         data: {
           first_name: firstName,
           last_name: lastName,
@@ -188,7 +193,7 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}${nextPath ?? ""}`,
       extraParams: {
         prompt: "select_account",
       },

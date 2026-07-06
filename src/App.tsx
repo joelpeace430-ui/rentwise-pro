@@ -36,6 +36,7 @@ import Landlords from "./pages/Landlords";
 import UtilityBilling from "./pages/UtilityBilling";
 import Commissions from "./pages/Commissions";
 import NotFound from "./pages/NotFound";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,7 @@ const App = () => (
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                   <Route
                     path="/agent/dashboard"
                     element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>}

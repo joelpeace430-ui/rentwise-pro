@@ -220,10 +220,23 @@ const handler = async (req: Request): Promise<Response> => {
       receiptData = receipt;
     }
 
+    // Fetch unpaid utility bills for prompts that show what tenant owes
+    let utilities: any[] = [];
+    if (["payment_prompt", "balance_inquiry"].includes(messageType)) {
+      const { data: utils } = await supabase
+        .from("utility_bills")
+        .select("utility_type, total_amount, billing_period")
+        .eq("tenant_id", tenantId)
+        .neq("status", "paid")
+        .order("billing_period", { ascending: false })
+        .limit(6);
+      utilities = utils || [];
+    }
+
     // Generate message
     const message = messageType === "custom" && customMessage
       ? customMessage
-      : generateMessage(messageType, tenant, invoiceData, receiptData);
+      : generateMessage(messageType, tenant, invoiceData, receiptData, utilities);
 
     if (!message) {
       return new Response(

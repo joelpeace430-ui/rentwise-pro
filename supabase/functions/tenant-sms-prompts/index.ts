@@ -21,22 +21,35 @@ interface SMSRequest {
   customMessage?: string;
 }
 
+const prettyUtility = (t: string) =>
+  t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+const formatUtilities = (utils: Array<{ utility_type: string; total_amount: number; billing_period: string }>) => {
+  if (!utils || utils.length === 0) return { line: "", total: 0 };
+  const total = utils.reduce((s, u) => s + Number(u.total_amount), 0);
+  const parts = utils.map((u) => `${prettyUtility(u.utility_type)} ${formatCurrency(Number(u.total_amount))}`);
+  return { line: `\n\nAmenities due: ${parts.join(", ")}\nAmenities Total: ${formatCurrency(total)}`, total };
+};
+
 const generateMessage = (
   type: string,
   tenant: any,
   invoiceData?: any,
-  receiptData?: any
+  receiptData?: any,
+  utilities?: Array<{ utility_type: string; total_amount: number; billing_period: string }>,
 ): string => {
   const name = tenant.first_name;
   const propertyName = Array.isArray(tenant.property) ? tenant.property[0]?.name : tenant.property?.name;
   const unit = tenant.unit_number;
+  const util = formatUtilities(utilities || []);
 
   switch (type) {
     case "payment_prompt":
       if (invoiceData) {
-        return `Hi ${name}, your rent of ${formatCurrency(invoiceData.amount)} for ${propertyName} Unit ${unit} is due on ${new Date(invoiceData.due_date).toLocaleDateString("en-KE", { dateStyle: "medium" })}.\n\nTo pay via M-Pesa:\n1. Go to M-Pesa menu\n2. Select Lipa Na M-Pesa\n3. Enter Paybill/Till number\n4. Enter your account: ${invoiceData.invoice_number}\n5. Enter amount: ${invoiceData.amount}\n\nA receipt will be sent to you automatically after payment.\n\nReply HELP for assistance.`;
+        const grand = Number(invoiceData.amount) + util.total;
+        return `Hi ${name}, your rent of ${formatCurrency(invoiceData.amount)} for ${propertyName} Unit ${unit} is due on ${new Date(invoiceData.due_date).toLocaleDateString("en-KE", { dateStyle: "medium" })}.${util.line}\n\nGrand Total Due: ${formatCurrency(grand)}\n\nTo pay via M-Pesa:\n1. Lipa Na M-Pesa > Paybill/Till\n2. Account: ${invoiceData.invoice_number}\n3. Amount: ${grand}\n\nReceipt sent automatically after payment. Reply HELP for assistance.`;
       }
-      return `Hi ${name}, your monthly rent of ${formatCurrency(tenant.monthly_rent)} for ${propertyName} Unit ${unit} is due soon.\n\nPlease make your payment via M-Pesa to avoid late fees.\n\nA receipt will be sent automatically after payment.\n\nReply HELP for assistance.`;
+      return `Hi ${name}, your monthly rent of ${formatCurrency(tenant.monthly_rent)} for ${propertyName} Unit ${unit} is due soon.${util.line}\n\nGrand Total Due: ${formatCurrency(Number(tenant.monthly_rent) + util.total)}\n\nPay via M-Pesa to avoid late fees. Reply HELP for assistance.`;
 
     case "receipt_request":
       if (receiptData) {
@@ -44,17 +57,23 @@ const generateMessage = (
       }
       return `Hi ${name}, your latest receipt for ${propertyName} Unit ${unit} is being generated. You will receive it shortly.\n\nReply HELP for assistance.`;
 
-    case "balance_inquiry":
-      if (invoiceData) {
-        return `Hi ${name}, here is your balance summary for ${propertyName} Unit ${unit}:\n\nOutstanding: ${formatCurrency(invoiceData.amount)}\nInvoice: ${invoiceData.invoice_number}\nDue Date: ${new Date(invoiceData.due_date).toLocaleDateString("en-KE", { dateStyle: "medium" })}\nStatus: ${invoiceData.status}\n\nTo make a payment, reply PAY or use M-Pesa.\n\nReply HELP for assistance.`;
+    case "balance_inquiry": {
+      const rentDue = invoiceData ? Number(invoiceData.amount) : 0;
+      const grand = rentDue + util.total;
+      if (rentDue === 0 && util.total === 0) {
+        return `Hi ${name}, you have no outstanding balance for ${propertyName} Unit ${unit}. You're all caught up!\n\nReply HELP for assistance.`;
       }
-      return `Hi ${name}, you have no outstanding balance for ${propertyName} Unit ${unit}. You're all caught up!\n\nReply HELP for assistance.`;
+      const rentLine = invoiceData
+        ? `Rent: ${formatCurrency(rentDue)} (Invoice ${invoiceData.invoice_number}, due ${new Date(invoiceData.due_date).toLocaleDateString("en-KE", { dateStyle: "medium" })})`
+        : `Rent: ${formatCurrency(0)}`;
+      return `Hi ${name}, balance summary for ${propertyName} Unit ${unit}:\n\n${rentLine}${util.line}\n\nGrand Total: ${formatCurrency(grand)}\n\nReply PAY or use M-Pesa. Reply HELP for assistance.`;
+    }
 
     case "lease_reminder":
       return `Hi ${name}, your lease for ${propertyName} Unit ${unit} expires on ${new Date(tenant.lease_end).toLocaleDateString("en-KE", { dateStyle: "medium" })}.\n\nPlease contact your landlord to discuss renewal options.\n\nReply HELP for assistance.`;
 
     case "help":
-      return `Hi ${name}, here are the services available to you:\n\n📱 PAYMENT - Pay rent via M-Pesa\n🧾 RECEIPT - Get your latest receipt\n💰 BALANCE - Check outstanding balance\n📋 LEASE - View lease information\n🔧 MAINTENANCE - Report an issue\n❓ HELP - Show this menu\n\nFor further assistance, contact your landlord or use the Tenant Portal.`;
+      return `Hi ${name}, services available:\n\nPAYMENT - Pay rent via M-Pesa\nRECEIPT - Get your latest receipt\nBALANCE - Check outstanding balance (rent + utilities)\nLEASE - View lease information\nMAINTENANCE - Report an issue\nHELP - Show this menu\n\nFor further assistance, contact your landlord.`;
 
     default:
       return "";

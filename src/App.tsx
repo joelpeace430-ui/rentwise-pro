@@ -37,6 +37,7 @@ import UtilityBilling from "./pages/UtilityBilling";
 import Commissions from "./pages/Commissions";
 import NotFound from "./pages/NotFound";
 import OAuthConsent from "./pages/OAuthConsent";
+import Demo from "./pages/Demo";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/demo" element={<Demo />} />
           {/* Tenant Portal Routes */}
           <Route
             path="/tenant/login"

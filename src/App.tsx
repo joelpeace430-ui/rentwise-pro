@@ -49,6 +49,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          <Route path="/demo" element={<Demo />} />
           {/* Tenant Portal Routes */}
           <Route
             path="/tenant/login"

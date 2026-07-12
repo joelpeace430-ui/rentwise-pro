@@ -1,358 +1,558 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import {
-  Play, Pause, SkipForward, RotateCcw, ArrowLeft,
-  Smartphone, CheckCircle2, AlertCircle, Coins, Receipt as ReceiptIcon,
-  FileBarChart, Users, Building2, Wallet, Sparkles,
+  DollarSign, Building2, Users, FileText, Calendar, AlertCircle,
+  Bell, Smartphone, Coins, Receipt as ReceiptIcon, ArrowLeft,
+  Play, Pause, RotateCcw, Sparkles, CheckCircle2, TrendingUp,
 } from "lucide-react";
+import StatCard from "@/components/dashboard/StatCard";
 
-// ---------- fake demo data ----------
-const LANDLORD = { name: "Joel Thayu", property: "Mumbi Estate — Block A" };
-const AGENT = { name: "Grace Wanjiru", rate: 5 }; // 5%
-const CARETAKER = { name: "Peter Otieno", rate: 2 }; // 2%
-const TENANT = { name: "Mary Njoroge", unit: "A-02", phone: "2547•••4149", rent: 1000, penaltyRate: 5 };
+const fmt = (n: number) =>
+  new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(n);
 
-const fmt = (n: number) => new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(n);
-
-type Step = {
-  key: string;
-  title: string;
-  narration: string;
-  icon: any;
-  ms: number;
+type Tenant = {
+  id: string;
+  name: string;
+  initials: string;
+  unit: string;
+  property: string;
+  phone: string;
+  rent: number;
+  paid: number;
+  penalty: number;
+  dueInDays: number; // negative = overdue
+  status: "pending" | "partial" | "paid" | "overdue";
+  lastPayment?: string;
 };
 
-const STEPS: Step[] = [
-  { key: "setup", title: "Meet the players", narration: "One landlord, one agent, one caretaker, one tenant. Rent is KES 1,000. Agent earns 5% and caretaker earns 2% of every payment.", icon: Users, ms: 4500 },
-  { key: "invoice", title: "Invoice is issued", narration: "The system auto-generates April's rent invoice for Mary. Status: Pending.", icon: FileBarChart, ms: 4000 },
-  { key: "partial", title: "Tenant pays half via M-Pesa Paybill", narration: "Mary sends KES 600 to the Paybill. Safaricom hits our C2B callback. We match by phone + account, record the payment, and mark the invoice partially paid.", icon: Smartphone, ms: 5500 },
-  { key: "penalty", title: "Overdue → penalty applied", narration: "After the due date, the balance of KES 400 attracts a 5% penalty = KES 20. Debt row: total owed KES 420.", icon: AlertCircle, ms: 5000 },
-  { key: "topup", title: "Tenant tops up the balance", narration: "Mary pays the remaining KES 420. System recomputes from the sum of payments — no double penalty, debt closes cleanly.", icon: Smartphone, ms: 5000 },
-  { key: "commission", title: "Commissions split automatically", narration: "A trigger writes to the commission ledger: agent gets 5% and caretaker 2% of every payment. Landlord keeps the rest.", icon: Coins, ms: 5000 },
-  { key: "receipt", title: "Receipt emailed to tenant", narration: "Mary receives an itemised receipt: what she paid, remaining debt (now zero), and any utilities.", icon: ReceiptIcon, ms: 4500 },
-  { key: "report", title: "Monthly report to landlord", narration: "On the 1st at 8 AM, Joel receives his monthly report: gross income, commissions paid, and a tenant-by-tenant ledger.", icon: FileBarChart, ms: 5500 },
+type PaymentRow = {
+  id: string;
+  tenant: string;
+  initials: string;
+  property: string;
+  amount: number;
+  method: "M-Pesa Paybill" | "M-Pesa Till" | "Bank" | "Cash";
+  date: string;
+  ref: string;
+  isNew?: boolean;
+};
+
+type Notif = {
+  id: string;
+  icon: any;
+  title: string;
+  body: string;
+  tone: "emerald" | "amber" | "rose" | "sky";
+  time: string;
+};
+
+const INITIAL_TENANTS: Tenant[] = [
+  { id: "t1", name: "Mary Njoroge", initials: "MN", unit: "A-02", property: "Mumbi Est · Block A", phone: "2547•••4149", rent: 12000, paid: 0, penalty: 0, dueInDays: -2, status: "overdue" },
+  { id: "t2", name: "John Kamau", initials: "JK", unit: "A-03", property: "Mumbi Est · Block A", phone: "2547•••2210", rent: 15000, paid: 15000, penalty: 0, dueInDays: 12, status: "paid", lastPayment: "2 days ago" },
+  { id: "t3", name: "Susan Achieng", initials: "SA", unit: "A-05", property: "Mumbi Est · Block A", phone: "2547•••8830", rent: 10000, paid: 5000, penalty: 0, dueInDays: 1, status: "partial", lastPayment: "5 days ago" },
+  { id: "t4", name: "Peter Mwangi", initials: "PM", unit: "B-01", property: "Mumbi Est · Block B", phone: "2547•••5521", rent: 18000, paid: 18000, penalty: 0, dueInDays: 20, status: "paid", lastPayment: "yesterday" },
+  { id: "t5", name: "Grace Wambui", initials: "GW", unit: "B-04", property: "Mumbi Est · Block B", phone: "2547•••7702", rent: 14000, paid: 0, penalty: 0, dueInDays: 3, status: "pending" },
 ];
 
+const AGENT_RATE = 5;
+const CARETAKER_RATE = 2;
+
+// scripted "live" events, spaced in ms from start
+type Event =
+  | { at: number; kind: "payment"; tenantId: string; amount: number; method: PaymentRow["method"] }
+  | { at: number; kind: "penalty"; tenantId: string; amount: number }
+  | { at: number; kind: "receipt"; tenantId: string }
+  | { at: number; kind: "reminder"; tenantId: string };
+
+const SCRIPT: Event[] = [
+  { at: 1500, kind: "payment", tenantId: "t5", amount: 14000, method: "M-Pesa Paybill" },
+  { at: 3200, kind: "receipt", tenantId: "t5" },
+  { at: 4500, kind: "penalty", tenantId: "t1", amount: 600 },
+  { at: 5200, kind: "reminder", tenantId: "t1" },
+  { at: 6800, kind: "payment", tenantId: "t1", amount: 6000, method: "M-Pesa Till" },
+  { at: 9000, kind: "payment", tenantId: "t3", amount: 5000, method: "M-Pesa Paybill" },
+  { at: 10500, kind: "receipt", tenantId: "t3" },
+  { at: 12500, kind: "payment", tenantId: "t1", amount: 6600, method: "M-Pesa Paybill" },
+  { at: 14000, kind: "receipt", tenantId: "t1" },
+];
+
+const TOTAL_MS = 16000;
+
 export default function Demo() {
-  const [idx, setIdx] = useState(0);
+  const [tenants, setTenants] = useState<Tenant[]>(INITIAL_TENANTS);
+  const [payments, setPayments] = useState<PaymentRow[]>([]);
+  const [notifs, setNotifs] = useState<Notif[]>([]);
+  const [toast, setToast] = useState<Notif | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [tick, setTick] = useState(0); // 0..100 within current step
-  const rafRef = useRef<number | null>(null);
+  const [progress, setProgress] = useState(0); // 0..100
   const startRef = useRef<number>(0);
+  const firedRef = useRef<Set<number>>(new Set());
+  const rafRef = useRef<number | null>(null);
 
-  const step = STEPS[idx];
+  const reset = () => {
+    setPlaying(false);
+    setTenants(INITIAL_TENANTS);
+    setPayments([]);
+    setNotifs([]);
+    setToast(null);
+    setProgress(0);
+    firedRef.current = new Set();
+  };
 
-  // auto-advance loop
+  const pushToast = (n: Notif) => {
+    setToast(n);
+    setNotifs((prev) => [n, ...prev].slice(0, 8));
+    window.setTimeout(() => setToast((cur) => (cur?.id === n.id ? null : cur)), 3200);
+  };
+
+  const applyEvent = (ev: Event) => {
+    const t = tenants.find((x) => x.id === ev.tenantId);
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    if (ev.kind === "payment" && t) {
+      setTenants((prev) =>
+        prev.map((x) => {
+          if (x.id !== ev.tenantId) return x;
+          const newPaid = x.paid + ev.amount;
+          const owed = x.rent + x.penalty - newPaid;
+          const status: Tenant["status"] = owed <= 0 ? "paid" : newPaid > 0 ? "partial" : x.status;
+          return { ...x, paid: newPaid, status, lastPayment: "just now", penalty: owed <= 0 ? 0 : x.penalty };
+        })
+      );
+      const row: PaymentRow = {
+        id: `p_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        tenant: t.name,
+        initials: t.initials,
+        property: `${t.property} · Unit ${t.unit}`,
+        amount: ev.amount,
+        method: ev.method,
+        date: timeStr,
+        ref: "M" + Math.random().toString(36).slice(2, 8).toUpperCase(),
+        isNew: true,
+      };
+      setPayments((prev) => [row, ...prev].slice(0, 8));
+      window.setTimeout(() => {
+        setPayments((prev) => prev.map((p) => (p.id === row.id ? { ...p, isNew: false } : p)));
+      }, 1200);
+      pushToast({
+        id: row.id,
+        icon: Smartphone,
+        title: `${ev.method} received`,
+        body: `${t.name} paid ${fmt(ev.amount)} · matched to unit ${t.unit}`,
+        tone: "emerald",
+        time: timeStr,
+      });
+    }
+
+    if (ev.kind === "penalty" && t) {
+      setTenants((prev) =>
+        prev.map((x) =>
+          x.id === ev.tenantId ? { ...x, penalty: x.penalty + ev.amount, status: "overdue" } : x
+        )
+      );
+      pushToast({
+        id: `pen_${Date.now()}`,
+        icon: AlertCircle,
+        title: "Penalty applied",
+        body: `${t.name} · ${fmt(ev.amount)} added to balance (5% of overdue)`,
+        tone: "rose",
+        time: timeStr,
+      });
+    }
+
+    if (ev.kind === "receipt" && t) {
+      pushToast({
+        id: `rc_${Date.now()}`,
+        icon: ReceiptIcon,
+        title: "Receipt emailed",
+        body: `Sent to ${t.name} · commissions posted to ledger`,
+        tone: "sky",
+        time: timeStr,
+      });
+    }
+
+    if (ev.kind === "reminder" && t) {
+      pushToast({
+        id: `rm_${Date.now()}`,
+        icon: Bell,
+        title: "SMS reminder sent",
+        body: `${t.name} · balance overdue`,
+        tone: "amber",
+        time: timeStr,
+      });
+    }
+  };
+
+  // playback loop
   useEffect(() => {
     if (!playing) return;
-    startRef.current = performance.now();
+    startRef.current = performance.now() - (progress / 100) * TOTAL_MS;
     const loop = (now: number) => {
-      const pct = Math.min(100, ((now - startRef.current) / step.ms) * 100);
-      setTick(pct);
-      if (pct >= 100) {
-        if (idx < STEPS.length - 1) {
-          setIdx((i) => i + 1);
-          setTick(0);
-        } else {
-          setPlaying(false);
+      const elapsed = now - startRef.current;
+      const pct = Math.min(100, (elapsed / TOTAL_MS) * 100);
+      setProgress(pct);
+      SCRIPT.forEach((ev, i) => {
+        if (elapsed >= ev.at && !firedRef.current.has(i)) {
+          firedRef.current.add(i);
+          applyEvent(ev);
         }
+      });
+      if (elapsed >= TOTAL_MS) {
+        setPlaying(false);
         return;
       }
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
-    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [playing, idx, step.ms]);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing]);
 
-  const reset = () => { setIdx(0); setTick(0); setPlaying(false); };
-  const next = () => { if (idx < STEPS.length - 1) { setIdx(idx + 1); setTick(0); } };
-  const prev = () => { if (idx > 0) { setIdx(idx - 1); setTick(0); } };
+  // derived stats
+  const stats = useMemo(() => {
+    const totalRevenue = tenants.reduce((s, t) => s + t.paid, 0);
+    const outstanding = tenants.reduce((s, t) => s + Math.max(0, t.rent + t.penalty - t.paid), 0);
+    const paidCount = tenants.filter((t) => t.status === "paid").length;
+    const partialCount = tenants.filter((t) => t.status === "partial").length;
+    const overdueCount = tenants.filter((t) => t.status === "overdue").length;
+    const pendingCount = tenants.filter((t) => t.status === "pending").length;
+    const commissionAgent = totalRevenue * (AGENT_RATE / 100);
+    const commissionCare = totalRevenue * (CARETAKER_RATE / 100);
+    const landlordNet = totalRevenue - commissionAgent - commissionCare;
+    return {
+      totalRevenue,
+      outstanding,
+      paidCount,
+      partialCount,
+      overdueCount,
+      pendingCount,
+      commissionAgent,
+      commissionCare,
+      landlordNet,
+    };
+  }, [tenants]);
 
-  // derived state per step so visuals match narration
-  const state = useMemo(() => {
-    const reached = (k: string) => STEPS.findIndex((s) => s.key === k) <= idx;
-    const paid = reached("topup") ? 1020 : reached("partial") ? 600 : 0;
-    const penalty = reached("penalty") ? 20 : 0;
-    const owed = reached("topup") ? 0 : reached("penalty") ? 420 : reached("partial") ? 400 : 1000;
-    const invoiceStatus = reached("topup") ? "Paid" : reached("partial") ? "Partial" : reached("invoice") ? "Pending" : "—";
-    const commissions = reached("commission") ? {
-      agent: Math.round(1020 * AGENT.rate / 100),
-      caretaker: Math.round(1020 * CARETAKER.rate / 100),
-    } : { agent: 0, caretaker: 0 };
-    const landlordNet = paid - commissions.agent - commissions.caretaker;
-    return { paid, penalty, owed, invoiceStatus, commissions, landlordNet, reached };
-  }, [idx]);
-
-  const StepIcon = step.icon;
+  const overdue = tenants.filter((t) => t.status === "overdue" || t.status === "partial");
+  const upcoming = tenants.filter((t) => t.status === "pending" || t.status === "paid").slice(0, 3);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      {/* Top bar */}
-      <div className="border-b bg-white/60 dark:bg-slate-900/60 backdrop-blur sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+      {/* Sticky demo control bar */}
+      <div className="sticky top-0 z-30 border-b bg-white/70 dark:bg-slate-900/70 backdrop-blur">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3 flex-wrap">
           <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Back to app
+            <ArrowLeft className="h-4 w-4" /> Back
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-2">
             <Sparkles className="h-4 w-4 text-amber-500" />
-            <span className="text-sm font-medium">Live simulation</span>
+            <span className="text-sm font-medium">Live demo · dummy data</span>
+            {playing && (
+              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 ml-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> LIVE
+              </span>
+            )}
+          </div>
+          <div className="flex-1" />
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={() => setPlaying((p) => !p)} className="gap-2">
+              {playing ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" /> {progress > 0 && progress < 100 ? "Resume" : "Start live demo"}</>}
+            </Button>
+            <Button size="sm" variant="outline" onClick={reset} className="gap-2">
+              <RotateCcw className="h-4 w-4" /> Reset
+            </Button>
           </div>
         </div>
+        <Progress value={progress} className="h-0.5 rounded-none" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-        {/* Hero + controls */}
-        <div className="text-center space-y-3">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">See how Mumbi Est works</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            A full end-to-end walkthrough: invoice → M-Pesa payment → penalty → top-up → commissions → receipt → landlord report. No real data touched.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-            <Button size="lg" onClick={() => setPlaying((p) => !p)} className="gap-2">
-              {playing ? <><Pause className="h-4 w-4" /> Pause</> : <><Play className="h-4 w-4" /> {idx === 0 && tick === 0 ? "Start simulation" : "Play"}</>}
-            </Button>
-            <Button size="lg" variant="outline" onClick={next} disabled={idx >= STEPS.length - 1} className="gap-2">
-              <SkipForward className="h-4 w-4" /> Next
-            </Button>
-            <Button size="lg" variant="ghost" onClick={reset} className="gap-2">
-              <RotateCcw className="h-4 w-4" /> Restart
-            </Button>
-          </div>
-        </div>
-
-        {/* Progress rail */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Step {idx + 1} of {STEPS.length}</span>
-            <span>{step.title}</span>
-          </div>
-          <Progress value={((idx + tick / 100) / STEPS.length) * 100} />
-          <div className="hidden md:grid grid-cols-8 gap-1 pt-1">
-            {STEPS.map((s, i) => (
-              <button
-                key={s.key}
-                onClick={() => { setIdx(i); setTick(0); }}
-                className={`h-1.5 rounded-full transition-colors ${i < idx ? "bg-primary" : i === idx ? "bg-amber-500" : "bg-muted"}`}
-                aria-label={s.title}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Narration card */}
-        <Card className="border-amber-200/60 shadow-lg bg-white/80 dark:bg-slate-900/80 backdrop-blur">
-          <CardContent className="p-6 flex gap-4 items-start">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white shrink-0">
-              <StepIcon className="h-6 w-6" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-xl font-semibold">{step.title}</h2>
-                <Badge variant="secondary">{idx + 1}/{STEPS.length}</Badge>
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-20 right-4 z-40 w-80 animate-in slide-in-from-right-4 fade-in duration-300">
+          <Card className={`shadow-xl border-l-4 ${
+            toast.tone === "emerald" ? "border-l-emerald-500" :
+            toast.tone === "rose" ? "border-l-rose-500" :
+            toast.tone === "amber" ? "border-l-amber-500" : "border-l-sky-500"
+          }`}>
+            <CardContent className="p-3 flex gap-3">
+              <div className={`h-9 w-9 shrink-0 rounded-lg flex items-center justify-center ${
+                toast.tone === "emerald" ? "bg-emerald-100 text-emerald-600" :
+                toast.tone === "rose" ? "bg-rose-100 text-rose-600" :
+                toast.tone === "amber" ? "bg-amber-100 text-amber-600" : "bg-sky-100 text-sky-600"
+              }`}>
+                <toast.icon className="h-5 w-5" />
               </div>
-              <p className="text-muted-foreground mt-1 leading-relaxed">{step.narration}</p>
-            </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold">{toast.title}</div>
+                <div className="text-xs text-muted-foreground truncate">{toast.body}</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-sm">Mumbi Est · Landlord: Joel Thayu · Watch the system react to live tenant payments.</p>
+        </div>
+
+        {/* Stat cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard title="Total Revenue" value={fmt(stats.totalRevenue)} icon={DollarSign} variant="accent" />
+          <StatCard title="Outstanding" value={fmt(stats.outstanding)} icon={AlertCircle} />
+          <StatCard title="Active Tenants" value={String(tenants.length)} icon={Users} />
+          <StatCard title="Properties" value="2" icon={Building2} />
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Recent Payments feed */}
+          <Card className="shadow-md lg:col-span-2">
+            <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <FileText className="h-4 w-4" /> Recent Payments
+              </CardTitle>
+              {playing && <Badge variant="secondary" className="gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />streaming</Badge>}
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {payments.length === 0 ? (
+                <div className="text-center py-10 text-sm text-muted-foreground">
+                  Press <span className="font-medium">Start live demo</span> to watch payments stream in.
+                </div>
+              ) : (
+                payments.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`flex items-center justify-between py-2 border-b border-border last:border-0 transition-all duration-500 ${
+                      p.isNew ? "bg-emerald-50/60 dark:bg-emerald-950/20 -mx-3 px-3 rounded-lg" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                          {p.initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">{p.tenant}</p>
+                        <p className="text-xs text-muted-foreground">{p.property}</p>
+                        <p className="text-[10px] text-muted-foreground/70 mt-0.5">{p.method} · Ref {p.ref}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-emerald-600">+{fmt(p.amount)}</p>
+                      <p className="text-xs text-muted-foreground">{p.date}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Notifications */}
+          <Card className="shadow-md">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Bell className="h-4 w-4" /> Live activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {notifs.length === 0 ? (
+                <div className="text-center py-10 text-sm text-muted-foreground">No activity yet</div>
+              ) : (
+                notifs.map((n) => (
+                  <div key={n.id} className="flex gap-3 pb-3 border-b border-border last:border-0 last:pb-0">
+                    <div className={`h-8 w-8 shrink-0 rounded-lg flex items-center justify-center ${
+                      n.tone === "emerald" ? "bg-emerald-100 text-emerald-600" :
+                      n.tone === "rose" ? "bg-rose-100 text-rose-600" :
+                      n.tone === "amber" ? "bg-amber-100 text-amber-600" : "bg-sky-100 text-sky-600"
+                    }`}>
+                      <n.icon className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{n.title}</p>
+                      <p className="text-xs text-muted-foreground">{n.body}</p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-0.5">{n.time}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tenants ledger + commissions */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="shadow-md lg:col-span-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Users className="h-4 w-4" /> Tenant ledger
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-xs text-muted-foreground border-b">
+                    <tr>
+                      <th className="text-left font-medium py-2">Tenant</th>
+                      <th className="text-right font-medium py-2">Rent</th>
+                      <th className="text-right font-medium py-2">Paid</th>
+                      <th className="text-right font-medium py-2">Balance</th>
+                      <th className="text-right font-medium py-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tenants.map((t) => {
+                      const bal = Math.max(0, t.rent + t.penalty - t.paid);
+                      return (
+                        <tr key={t.id} className="border-b border-border last:border-0 transition-colors">
+                          <td className="py-3">
+                            <div className="font-medium">{t.name}</div>
+                            <div className="text-xs text-muted-foreground">{t.property} · Unit {t.unit}</div>
+                          </td>
+                          <td className="text-right">{fmt(t.rent)}</td>
+                          <td className="text-right text-emerald-600 font-medium">{fmt(t.paid)}</td>
+                          <td className="text-right">
+                            <span className={bal > 0 ? "text-rose-600 font-semibold" : "text-muted-foreground"}>
+                              {fmt(bal)}
+                            </span>
+                            {t.penalty > 0 && (
+                              <div className="text-[10px] text-rose-500">incl. {fmt(t.penalty)} penalty</div>
+                            )}
+                          </td>
+                          <td className="text-right">
+                            <Badge
+                              variant={t.status === "paid" ? "default" : t.status === "partial" ? "secondary" : "outline"}
+                              className={
+                                t.status === "overdue" ? "border-rose-300 text-rose-600" :
+                                t.status === "paid" ? "bg-emerald-600 hover:bg-emerald-600" : ""
+                              }
+                            >
+                              {t.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Commissions & landlord net */}
+          <div className="space-y-6">
+            <Card className="shadow-md">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <Coins className="h-4 w-4" /> Commissions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div className="rounded-lg border p-3">
+                  <div className="text-xs text-muted-foreground">Agent · Grace Wanjiru ({AGENT_RATE}%)</div>
+                  <div className="text-xl font-bold text-emerald-600 tabular-nums">{fmt(stats.commissionAgent)}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">auto-posted per payment</div>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <div className="text-xs text-muted-foreground">Caretaker · Peter Otieno ({CARETAKER_RATE}%)</div>
+                  <div className="text-xl font-bold text-emerald-600 tabular-nums">{fmt(stats.commissionCare)}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">auto-posted per payment</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-md bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/30 dark:to-slate-900">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" /> Landlord net
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold tabular-nums text-emerald-600">
+                  {fmt(Math.max(0, stats.landlordNet))}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">after commissions</div>
+                <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Ready for month-end report
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Payment schedule */}
+        <Card className="shadow-md">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Calendar className="h-4 w-4" /> Payment schedule
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {overdue.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">Needs attention ({overdue.length})</span>
+                </div>
+                <div className="space-y-2">
+                  {overdue.map((t) => {
+                    const bal = Math.max(0, t.rent + t.penalty - t.paid);
+                    return (
+                      <div key={t.id} className="flex items-center justify-between p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                        <div>
+                          <p className="text-sm font-medium">{t.name}</p>
+                          <p className="text-xs text-muted-foreground">{t.property} · Unit {t.unit}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold">{fmt(bal)}</p>
+                          <p className="text-xs text-destructive">
+                            {t.status === "overdue" ? `${Math.abs(t.dueInDays)} days overdue` : "partially paid"}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {upcoming.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">Upcoming</span>
+                </div>
+                <div className="space-y-2">
+                  {upcoming.map((t) => (
+                    <div key={t.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                      <div>
+                        <p className="text-sm font-medium">{t.name}</p>
+                        <p className="text-xs text-muted-foreground">{t.property} · Unit {t.unit}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold">{fmt(t.rent)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t.status === "paid" ? `paid ${t.lastPayment}` : `due in ${t.dueInDays} days`}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Live dashboards */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          {/* Tenant / Invoice */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2"><Users className="h-4 w-4" /> Tenant & Invoice</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <Row label="Tenant" value={TENANT.name} />
-              <Row label="Unit" value={TENANT.unit} />
-              <Row label="Phone" value={TENANT.phone} />
-              <Row label="Rent" value={fmt(TENANT.rent)} />
-              <div className="pt-2 border-t space-y-2">
-                <Row label="Paid" value={<span className="font-semibold text-emerald-600">{fmt(state.paid)}</span>} />
-                <Row label="Penalty" value={<span className={state.penalty ? "font-semibold text-rose-600" : ""}>{fmt(state.penalty)}</span>} />
-                <Row label="Owed" value={<span className="font-semibold">{fmt(state.owed)}</span>} />
-                <Row label="Invoice" value={
-                  <Badge variant={state.invoiceStatus === "Paid" ? "default" : state.invoiceStatus === "Partial" ? "secondary" : "outline"}>
-                    {state.invoiceStatus}
-                  </Badge>
-                } />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Commissions */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2"><Coins className="h-4 w-4" /> Commission ledger</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="rounded-lg border p-3 space-y-1">
-                <div className="text-xs text-muted-foreground">Agent · {AGENT.name} ({AGENT.rate}%)</div>
-                <div className="text-lg font-semibold text-emerald-600">{fmt(state.commissions.agent)}</div>
-                <Badge variant={state.commissions.agent ? "secondary" : "outline"} className="text-[10px]">
-                  {state.commissions.agent ? "Pending payout" : "—"}
-                </Badge>
-              </div>
-              <div className="rounded-lg border p-3 space-y-1">
-                <div className="text-xs text-muted-foreground">Caretaker · {CARETAKER.name} ({CARETAKER.rate}%)</div>
-                <div className="text-lg font-semibold text-emerald-600">{fmt(state.commissions.caretaker)}</div>
-                <Badge variant={state.commissions.caretaker ? "secondary" : "outline"} className="text-[10px]">
-                  {state.commissions.caretaker ? "Pending payout" : "—"}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Landlord net */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2"><Building2 className="h-4 w-4" /> Landlord · {LANDLORD.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <Row label="Property" value={LANDLORD.property} />
-              <Row label="Gross collected" value={fmt(state.paid)} />
-              <Row label="− Agent" value={<span className="text-rose-600">−{fmt(state.commissions.agent)}</span>} />
-              <Row label="− Caretaker" value={<span className="text-rose-600">−{fmt(state.commissions.caretaker)}</span>} />
-              <div className="pt-2 border-t">
-                <Row label="Net take-home" value={<span className="text-lg font-bold text-emerald-600">{fmt(Math.max(0, state.landlordNet))}</span>} />
-              </div>
-            </CardContent>
-          </Card>
+        <div className="text-center text-xs text-muted-foreground pt-2 pb-6">
+          This is a live simulation using dummy data — your real database is untouched.
         </div>
-
-        {/* Contextual panel per step */}
-        {step.key === "partial" || step.key === "topup" ? (
-          <MpesaSTKMock amount={step.key === "partial" ? 600 : 420} phone={TENANT.phone} />
-        ) : step.key === "receipt" ? (
-          <ReceiptMock paid={state.paid} penalty={state.penalty} tenant={TENANT.name} />
-        ) : step.key === "report" ? (
-          <ReportMock net={state.landlordNet} paid={state.paid} agent={state.commissions.agent} caretaker={state.commissions.caretaker} />
-        ) : null}
-
-        <div className="text-center text-xs text-muted-foreground pt-4">
-          This simulation uses fake data. Your real database is untouched.
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right">{value}</span>
-    </div>
-  );
-}
-
-function MpesaSTKMock({ amount, phone }: { amount: number; phone: string }) {
-  return (
-    <Card className="border-emerald-200/60 bg-emerald-50/40 dark:bg-emerald-950/20">
-      <CardContent className="p-6 flex flex-col md:flex-row items-center gap-6">
-        <div className="w-64 rounded-2xl bg-slate-900 text-white p-4 shadow-xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent" />
-          <div className="relative">
-            <div className="text-xs opacity-70">M-PESA</div>
-            <div className="mt-2 text-xs">Pay Bill</div>
-            <div className="text-lg font-semibold">174379</div>
-            <div className="mt-2 text-xs">Account · {TENANT.unit}</div>
-            <div className="text-xs opacity-70">Amount</div>
-            <div className="text-2xl font-bold">{fmt(amount)}</div>
-            <div className="mt-3 flex items-center gap-2 text-xs">
-              <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Sending to {phone}
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 space-y-2 text-sm">
-          <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Safaricom C2B callback received</div>
-          <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Matched to {TENANT.name} (unit {TENANT.unit})</div>
-          <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Payment row inserted · trigger fired</div>
-          <div className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> Invoice + debt recomputed from sum of payments</div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ReceiptMock({ paid, penalty, tenant }: { paid: number; penalty: number; tenant: string }) {
-  return (
-    <Card className="border-slate-300/60">
-      <CardContent className="p-6">
-        <div className="max-w-md mx-auto border rounded-lg p-6 bg-white dark:bg-slate-950 shadow-sm space-y-3">
-          <div className="text-center">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">Payment Receipt</div>
-            <div className="font-semibold text-lg">Mumbi Est</div>
-          </div>
-          <div className="border-t pt-3 text-sm space-y-1.5">
-            <Row label="Tenant" value={tenant} />
-            <Row label="Reference" value="MPX7A2Q9L" />
-            <Row label="Rent" value={fmt(1000)} />
-            <Row label="Penalty" value={fmt(penalty)} />
-            <div className="border-t pt-2">
-              <Row label="Total paid" value={<span className="font-bold">{fmt(paid)}</span>} />
-              <Row label="Balance" value={<span className="text-emerald-600 font-semibold">{fmt(0)}</span>} />
-            </div>
-          </div>
-          <div className="text-center text-xs text-muted-foreground pt-2">Emailed & SMS sent to tenant</div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ReportMock({ net, paid, agent, caretaker }: { net: number; paid: number; agent: number; caretaker: number }) {
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2"><Wallet className="h-4 w-4" /> Monthly report preview — {LANDLORD.name}</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-4 md:grid-cols-4 text-sm">
-        <Stat label="Gross income" value={fmt(paid)} />
-        <Stat label="Agent commissions" value={fmt(agent)} tone="rose" />
-        <Stat label="Caretaker commissions" value={fmt(caretaker)} tone="rose" />
-        <Stat label="Net take-home" value={fmt(Math.max(0, net))} tone="emerald" />
-        <div className="md:col-span-4 border-t pt-3">
-          <div className="text-xs text-muted-foreground mb-2">Tenant ledger</div>
-          <div className="rounded border divide-y">
-            <LedgerRow name={TENANT.name} unit={TENANT.unit} expected={1000} paid={paid} status="Paid" />
-            <LedgerRow name="John Kamau" unit="A-03" expected={1200} paid={1200} status="Paid" />
-            <LedgerRow name="Susan Achieng" unit="A-05" expected={1000} paid={500} status="Partial" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "emerald" | "rose" }) {
-  const color = tone === "emerald" ? "text-emerald-600" : tone === "rose" ? "text-rose-600" : "";
-  return (
-    <div className="rounded-lg border p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`text-xl font-bold mt-1 ${color}`}>{value}</div>
-    </div>
-  );
-}
-
-function LedgerRow({ name, unit, expected, paid, status }: { name: string; unit: string; expected: number; paid: number; status: string }) {
-  const bal = expected - paid;
-  return (
-    <div className="grid grid-cols-5 gap-2 px-3 py-2 text-sm items-center">
-      <div className="col-span-2">
-        <div className="font-medium">{name}</div>
-        <div className="text-xs text-muted-foreground">Unit {unit}</div>
-      </div>
-      <div>{fmt(expected)}</div>
-      <div className="text-emerald-600">{fmt(paid)}</div>
-      <div className="flex items-center justify-between">
-        <span className={bal > 0 ? "text-rose-600" : ""}>{fmt(bal)}</span>
-        <Badge variant={status === "Paid" ? "default" : "secondary"} className="text-[10px]">{status}</Badge>
       </div>
     </div>
   );

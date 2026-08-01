@@ -163,14 +163,6 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
         </div>
 
         <Link
-          to="/demo"
-          onClick={onNavigate}
-          className={location.pathname === "/demo" ? "nav-item-active" : "nav-item"}
-        >
-          <Sparkles className="h-5 w-5 text-amber-500" />
-          <span>Live Demo</span>
-        </Link>
-        <Link
           to="/settings"
           onClick={onNavigate}
           className={location.pathname === "/settings" ? "nav-item-active" : "nav-item"}

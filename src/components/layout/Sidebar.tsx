@@ -23,7 +23,6 @@ import {
   Droplet,
   Coins,
   UserPlus,
-  Sparkles,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {

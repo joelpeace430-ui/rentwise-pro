@@ -23,7 +23,6 @@ import {
   Droplet,
   Coins,
   UserPlus,
-  Sparkles,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -162,14 +161,6 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
           </div>
         </div>
 
-        <Link
-          to="/demo"
-          onClick={onNavigate}
-          className={location.pathname === "/demo" ? "nav-item-active" : "nav-item"}
-        >
-          <Sparkles className="h-5 w-5 text-amber-500" />
-          <span>Live Demo</span>
-        </Link>
         <Link
           to="/settings"
           onClick={onNavigate}

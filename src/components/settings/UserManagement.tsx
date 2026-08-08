@@ -31,7 +31,7 @@ const ROLE_CONFIG: { role: AppRole; label: string; description: string; icon: Re
   { role: "landlord", label: "Landlord", description: "Property & tenant management", icon: Briefcase, colorClass: "text-primary" },
   { role: "finance", label: "Finance", description: "Payments, invoices, reports", icon: Calculator, colorClass: "text-amber-600" },
   { role: "agent", label: "Agent", description: "Tenant & property operations", icon: UserCog, colorClass: "text-blue-600" },
-  { role: "caretaker", label: "Caretaker", description: "Maintenance management", icon: Wrench, colorClass: "text-emerald-600" },
+  
 ];
 
 const ROLE_COLORS: Record<AppRole, string> = {
@@ -39,7 +39,7 @@ const ROLE_COLORS: Record<AppRole, string> = {
   landlord: "bg-primary/10 text-primary border-primary/20",
   finance: "bg-amber-500/10 text-amber-600 border-amber-500/20",
   agent: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  caretaker: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  
 };
 
 const UserManagement = () => {

@@ -14,7 +14,7 @@ export const FEATURE_LABELS: Record<FeatureKey, { label: string; description: st
 };
 
 export const ALL_FEATURES: FeatureKey[] = ["finance", "tax", "expenses", "reports", "maintenance"];
-export const ALL_ROLES: AppRole[] = ["admin", "landlord", "finance", "agent", "caretaker"];
+export const ALL_ROLES: AppRole[] = ["admin", "landlord", "finance", "agent"];
 
 export interface FeatureToggle {
   id: string;

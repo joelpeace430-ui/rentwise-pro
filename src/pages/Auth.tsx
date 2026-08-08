@@ -408,7 +408,7 @@ const Auth = () => {
                       <SelectContent>
                         <SelectItem value="landlord">Landlord</SelectItem>
                         <SelectItem value="agent">Agent</SelectItem>
-                        <SelectItem value="caretaker">Caretaker</SelectItem>
+                        
                         <SelectItem value="finance">Finance</SelectItem>
                       </SelectContent>
                     </Select>

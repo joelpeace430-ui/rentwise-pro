@@ -46,6 +46,7 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     loading,
     isAdmin,
     isAgent,
+    isFinance,
     isLandlord,
     canManageProperties,
     canManageTenants,
@@ -53,6 +54,7 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
   } = useUserRoles();
   const { isFeatureEnabled } = useFeatureToggles();
 
+  // Merged Agent + Finance portal
   const agentNavigation = [
     { name: "Dashboard", href: "/agent/dashboard", icon: LayoutDashboard, show: true },
     { name: "Register Landlord", href: "/agent/onboard", icon: UserPlus, show: true },
@@ -60,14 +62,17 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Properties", href: "/agent/properties", icon: Building2, show: true },
     { name: "Tenants", href: "/agent/tenants", icon: Users, show: true },
     { name: "Payments", href: "/agent/payments", icon: CreditCard, show: true },
+    { name: "Invoices", href: "/invoices", icon: FileText, show: true },
+    { name: "Debts", href: "/debts", icon: AlertTriangle, show: true },
+    { name: "Expenses", href: "/expenses", icon: Wallet, show: true },
     { name: "Commissions", href: "/agent/commissions", icon: Coins, show: true },
+    { name: "Reports", href: "/reports", icon: BarChart3, show: true },
   ];
 
   const landlordNavigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard, show: true },
     { name: "Properties", href: "/properties", icon: Building2, show: canManageProperties() },
     { name: "Tenants", href: "/tenants", icon: Users, show: canManageTenants() },
-    { name: "Caretakers", href: "/caretakers", icon: HardHat, show: canManageProperties() },
     { name: "Landlords", href: "/landlords", icon: Briefcase, show: isAdmin() },
     { name: "Invoices", href: "/invoices", icon: FileText, show: isFeatureEnabled("finance") },
     { name: "Payments", href: "/payments", icon: CreditCard, show: isFeatureEnabled("finance") },
@@ -79,11 +84,12 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Reports", href: "/reports", icon: BarChart3, show: isFeatureEnabled("reports") },
   ];
 
-  // Agents (even if they also hold finance) get the agent-only nav. Admin/landlord get the landlord nav.
-  const isAgentOnly = isAgent() && !isAdmin() && !isLandlord();
-  const allNavigation = isAgentOnly ? agentNavigation : landlordNavigation;
+  // Agent and Finance share one merged portal. Admin/landlord get the landlord nav.
+  const isPartnerPortal = (isAgent() || isFinance()) && !isAdmin() && !isLandlord();
+  const allNavigation = isPartnerPortal ? agentNavigation : landlordNavigation;
 
   const navigation = allNavigation.filter((item) => item.show);
+
 
   const handleSignOut = async () => {
     await signOut();

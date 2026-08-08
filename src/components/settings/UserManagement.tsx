@@ -34,7 +34,7 @@ const ROLE_CONFIG: { role: AppRole; label: string; description: string; icon: Re
   
 ];
 
-const ROLE_COLORS: Record<AppRole, string> = {
+const ROLE_COLORS: Partial<Record<AppRole, string>> = {
   admin: "bg-destructive/10 text-destructive border-destructive/20",
   landlord: "bg-primary/10 text-primary border-primary/20",
   finance: "bg-amber-500/10 text-amber-600 border-amber-500/20",

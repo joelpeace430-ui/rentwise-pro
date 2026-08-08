@@ -54,7 +54,18 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
   } = useUserRoles();
   const { isFeatureEnabled } = useFeatureToggles();
 
-  // Merged Agent + Finance portal
+  // Finance keeps its own standalone portal
+  const financeNavigation = [
+    { name: "Dashboard", href: "/", icon: LayoutDashboard, show: true },
+    { name: "Invoices", href: "/invoices", icon: FileText, show: true },
+    { name: "Payments", href: "/payments", icon: CreditCard, show: true },
+    { name: "Debts", href: "/debts", icon: AlertTriangle, show: true },
+    { name: "Expenses", href: "/expenses", icon: Wallet, show: true },
+    { name: "Commissions", href: "/commissions", icon: Coins, show: true },
+    { name: "Reports", href: "/reports", icon: BarChart3, show: true },
+  ];
+
+  // Agent + Landlord merged portal
   const agentNavigation = [
     { name: "Dashboard", href: "/agent/dashboard", icon: LayoutDashboard, show: true },
     { name: "Register Landlord", href: "/agent/onboard", icon: UserPlus, show: true },
@@ -64,7 +75,9 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Payments", href: "/agent/payments", icon: CreditCard, show: true },
     { name: "Invoices", href: "/invoices", icon: FileText, show: true },
     { name: "Debts", href: "/debts", icon: AlertTriangle, show: true },
+    { name: "Utilities", href: "/utilities", icon: Droplet, show: true },
     { name: "Expenses", href: "/expenses", icon: Wallet, show: true },
+    { name: "Maintenance", href: "/maintenance", icon: Wrench, show: canViewMaintenance() },
     { name: "Commissions", href: "/agent/commissions", icon: Coins, show: true },
     { name: "Reports", href: "/reports", icon: BarChart3, show: true },
   ];
@@ -84,11 +97,18 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Reports", href: "/reports", icon: BarChart3, show: isFeatureEnabled("reports") },
   ];
 
-  // Agent and Finance share one merged portal. Admin/landlord get the landlord nav.
-  const isPartnerPortal = (isAgent() || isFinance()) && !isAdmin() && !isLandlord();
-  const allNavigation = isPartnerPortal ? agentNavigation : landlordNavigation;
+  // Agent (incl. agents who are also landlords) get the merged agent+landlord portal.
+  // Finance is its own separate portal. Admin keeps the full landlord/admin nav.
+  const allNavigation = isAdmin()
+    ? landlordNavigation
+    : isAgent()
+      ? agentNavigation
+      : isFinance()
+        ? financeNavigation
+        : landlordNavigation;
 
   const navigation = allNavigation.filter((item) => item.show);
+
 
 
   const handleSignOut = async () => {

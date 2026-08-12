@@ -97,14 +97,12 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
   ];
 
   // Agent (incl. agents who are also landlords) get the merged agent+landlord portal.
-  // Finance is its own separate portal. Admin keeps the full landlord/admin nav.
-  const allNavigation = isAdmin()
-    ? landlordNavigation
-    : isAgent()
-      ? agentNavigation
-      : isFinance()
-        ? financeNavigation
-        : landlordNavigation;
+  // Finance is its own separate portal. Landlords get the landlord nav.
+  const allNavigation = isAgent()
+    ? agentNavigation
+    : isFinance()
+      ? financeNavigation
+      : landlordNavigation;
 
   const navigation = allNavigation.filter((item) => item.show);
 

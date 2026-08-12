@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: "Admin",
   landlord: "Landlord",
   finance: "Finance",
   agent: "Agent",

@@ -57,7 +57,6 @@ export const useUserRoles = () => {
   const isCaretaker = (): boolean => hasRole("caretaker");
   const isFinance = (): boolean => hasRole("finance");
 
-  // Admin sees everything
   const canManageProperties = (): boolean => {
     return isLandlord();
   };

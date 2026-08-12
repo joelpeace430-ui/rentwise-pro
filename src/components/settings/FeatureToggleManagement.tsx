@@ -65,7 +65,7 @@ const FeatureToggleManagement = () => {
           Feature Access Control
         </CardTitle>
         <CardDescription>
-          Enable or disable features per role. Admins always have access to all features.
+          Enable or disable features per role.
         </CardDescription>
       </CardHeader>
       <CardContent>

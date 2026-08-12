@@ -11,7 +11,6 @@ interface FeatureGateProps {
 
 /**
  * Blocks access to a route if the feature is disabled for the user's roles.
- * Admins always pass through.
  */
 const FeatureGate = ({ feature, children, redirectTo = "/" }: FeatureGateProps) => {
   const { loading: rolesLoading } = useUserRoles();

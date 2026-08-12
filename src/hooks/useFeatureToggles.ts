@@ -51,7 +51,6 @@ export const useFeatureToggles = () => {
 
   /**
    * Returns true if ANY of the user's roles has the feature enabled.
-   * Admin always has every feature enabled.
    */
   const isFeatureEnabled = (feature: FeatureKey): boolean => {
     if (roles.length === 0) return false;

@@ -17,7 +17,6 @@ import Invoices from "./pages/Invoices";
 import Payments from "./pages/Payments";
 import Debts from "./pages/Debts";
 import Expenses from "./pages/Expenses";
-import Maintenance from "./pages/Maintenance";
 import Reports from "./pages/Reports";
 
 import Settings from "./pages/Settings";
@@ -33,7 +32,6 @@ import AgentOnboard from "./pages/AgentOnboard";
 import PropertyDetail from "./pages/PropertyDetail";
 
 import Landlords from "./pages/Landlords";
-import UtilityBilling from "./pages/UtilityBilling";
 import Commissions from "./pages/Commissions";
 import NotFound from "./pages/NotFound";
 import OAuthConsent from "./pages/OAuthConsent";

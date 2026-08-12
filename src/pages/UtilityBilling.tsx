@@ -19,7 +19,16 @@ const UTILITY_LABELS: Record<string, { label: string; icon: any }> = {
   garbage: { label: "Garbage", icon: Trash },
 };
 
-const UtilityBilling = () => {
+const UtilityBilling = ({ embedded = false }: { embedded?: boolean }) => {
+  const Shell = ({ children }: { children: React.ReactNode }) =>
+    embedded ? (
+      <>{children}</>
+    ) : (
+      <DashboardLayout title="Utility Bills" subtitle="Water, electricity, and garbage usage billing">
+        {children}
+      </DashboardLayout>
+    );
+
   const { user } = useAuth();
   const { toast } = useToast();
   const [bills, setBills] = useState<any[]>([]);
@@ -84,7 +93,7 @@ const UtilityBilling = () => {
   };
 
   return (
-    <DashboardLayout title="Utility Bills" subtitle="Water, electricity, and garbage usage billing">
+    <Shell>
       <div className="space-y-6">
         <div className="flex justify-end">
           <Button onClick={() => setOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> New Bill</Button>
@@ -188,7 +197,7 @@ const UtilityBilling = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+    </Shell>
   );
 };
 

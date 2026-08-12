@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TenantAuthProvider } from "@/contexts/TenantAuthContext";
@@ -17,7 +17,6 @@ import Invoices from "./pages/Invoices";
 import Payments from "./pages/Payments";
 import Debts from "./pages/Debts";
 import Expenses from "./pages/Expenses";
-import Maintenance from "./pages/Maintenance";
 import Reports from "./pages/Reports";
 
 import Settings from "./pages/Settings";
@@ -33,7 +32,6 @@ import AgentOnboard from "./pages/AgentOnboard";
 import PropertyDetail from "./pages/PropertyDetail";
 
 import Landlords from "./pages/Landlords";
-import UtilityBilling from "./pages/UtilityBilling";
 import Commissions from "./pages/Commissions";
 import NotFound from "./pages/NotFound";
 import OAuthConsent from "./pages/OAuthConsent";
@@ -133,10 +131,7 @@ const App = () => (
                     path="/landlords"
                     element={<ProtectedRoute><Landlords /></ProtectedRoute>}
                   />
-                  <Route
-                    path="/utilities"
-                    element={<ProtectedRoute><UtilityBilling /></ProtectedRoute>}
-                  />
+                  <Route path="/utilities" element={<Navigate to="/expenses" replace />} />
                   <Route
                     path="/commissions"
                     element={<ProtectedRoute><Commissions /></ProtectedRoute>}
@@ -181,14 +176,7 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
-                  <Route
-                    path="/maintenance"
-                    element={
-                      <ProtectedRoute>
-                        <Maintenance />
-                      </ProtectedRoute>
-                    }
-                  />
+                  <Route path="/maintenance" element={<Navigate to="/expenses" replace />} />
                   <Route
                     path="/reports"
                     element={

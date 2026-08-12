@@ -22,6 +22,9 @@ import {
 } from "@/components/ui/select";
 import { Plus, Receipt, TrendingDown, FileText, Trash2, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import UtilityBilling from "./UtilityBilling";
+import Maintenance from "./Maintenance";
 
 const Expenses = () => {
   const currentYear = new Date().getFullYear();
@@ -46,8 +49,14 @@ const Expenses = () => {
   }
 
   return (
-    <DashboardLayout title="Expenses" subtitle="Track and manage property expenses">
-      <div className="space-y-6">
+    <DashboardLayout title="Expenses" subtitle="Expenses, utility bills and maintenance in one place">
+      <Tabs defaultValue="expenses" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="expenses">Expenses</TabsTrigger>
+          <TabsTrigger value="utilities">Utility Bills</TabsTrigger>
+          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+        </TabsList>
+        <TabsContent value="expenses" className="space-y-6">
         {/* Header actions */}
         <div className="flex items-center justify-between">
           <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
@@ -175,7 +184,16 @@ const Expenses = () => {
             )}
           </CardContent>
         </Card>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="utilities">
+          <UtilityBilling embedded />
+        </TabsContent>
+
+        <TabsContent value="maintenance">
+          <Maintenance embedded />
+        </TabsContent>
+      </Tabs>
 
       <ExpenseDialog
         open={dialogOpen}

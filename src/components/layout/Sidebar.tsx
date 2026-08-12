@@ -73,9 +73,7 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Payments", href: "/agent/payments", icon: CreditCard, show: true },
     { name: "Invoices", href: "/invoices", icon: FileText, show: true },
     { name: "Debts", href: "/debts", icon: AlertTriangle, show: true },
-    { name: "Utilities", href: "/utilities", icon: Droplet, show: true },
     { name: "Expenses", href: "/expenses", icon: Wallet, show: true },
-    { name: "Maintenance", href: "/maintenance", icon: Wrench, show: canViewMaintenance() },
     { name: "Commissions", href: "/agent/commissions", icon: Coins, show: true },
     { name: "Reports", href: "/reports", icon: BarChart3, show: true },
   ];
@@ -89,9 +87,7 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Payments", href: "/payments", icon: CreditCard, show: isFeatureEnabled("finance") },
     { name: "Commissions", href: "/commissions", icon: Coins, show: isFeatureEnabled("finance") && canManageProperties() },
     { name: "Debts", href: "/debts", icon: AlertTriangle, show: isFeatureEnabled("finance") },
-    { name: "Utilities", href: "/utilities", icon: Droplet, show: canManageProperties() },
     { name: "Expenses", href: "/expenses", icon: Wallet, show: isFeatureEnabled("expenses") },
-    { name: "Maintenance", href: "/maintenance", icon: Wrench, show: canViewMaintenance() && isFeatureEnabled("maintenance") },
     { name: "Reports", href: "/reports", icon: BarChart3, show: isFeatureEnabled("reports") },
   ];
 

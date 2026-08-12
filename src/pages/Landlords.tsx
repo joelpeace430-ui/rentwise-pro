@@ -20,7 +20,7 @@ interface LandlordRow {
 }
 
 const Landlords = () => {
-  const { isAdmin, loading: rolesLoading } = useUserRoles();
+  const { isLandlord, loading: rolesLoading } = useUserRoles();
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<LandlordRow[]>([]);
   const [selected, setSelected] = useState<LandlordRow | null>(null);
@@ -59,7 +59,7 @@ const Landlords = () => {
       setRows(enriched);
       setLoading(false);
     };
-    if (!rolesLoading && isAdmin()) load();
+    if (!rolesLoading && isLandlord()) load();
   }, [rolesLoading]);
 
   const openLandlord = async (l: LandlordRow) => {
@@ -122,7 +122,7 @@ const Landlords = () => {
 
 
   if (rolesLoading) return null;
-  if (!isAdmin()) return <Navigate to="/" replace />;
+  if (!isLandlord()) return <Navigate to="/" replace />;
 
   const displayName = (l: LandlordRow) =>
     [l.first_name, l.last_name].filter(Boolean).join(" ") || l.email || "—";

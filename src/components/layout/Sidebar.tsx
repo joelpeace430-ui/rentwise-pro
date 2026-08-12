@@ -44,7 +44,6 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
   const {
     roles,
     loading,
-    isAdmin,
     isAgent,
     isFinance,
     isLandlord,
@@ -86,7 +85,7 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Dashboard", href: "/", icon: LayoutDashboard, show: true },
     { name: "Properties", href: "/properties", icon: Building2, show: canManageProperties() },
     { name: "Tenants", href: "/tenants", icon: Users, show: canManageTenants() },
-    { name: "Landlords", href: "/landlords", icon: Briefcase, show: isAdmin() },
+    { name: "Landlords", href: "/landlords", icon: Briefcase, show: isLandlord() },
     { name: "Invoices", href: "/invoices", icon: FileText, show: isFeatureEnabled("finance") },
     { name: "Payments", href: "/payments", icon: CreditCard, show: isFeatureEnabled("finance") },
     { name: "Commissions", href: "/commissions", icon: Coins, show: isFeatureEnabled("finance") && canManageProperties() },

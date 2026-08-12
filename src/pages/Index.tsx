@@ -18,10 +18,10 @@ import {
 
 const Index = () => {
   const { stats, loading } = useDashboardStats();
-  const { isAgent, isAdmin, isLandlord, loading: rolesLoading } = useUserRoles();
+  const { isAgent, isLandlord, loading: rolesLoading } = useUserRoles();
 
   // Redirect agent-only users to agent dashboard
-  const isAgentOnly = isAgent() && !isAdmin() && !isLandlord();
+  const isAgentOnly = isAgent() && !isLandlord();
   if (!rolesLoading && isAgentOnly) {
     return <Navigate to="/agent/dashboard" replace />;
   }

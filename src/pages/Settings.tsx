@@ -41,7 +41,7 @@ interface Profile {
 const Settings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { isAdmin } = useUserRoles();
+  const { isLandlord } = useUserRoles();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -192,12 +192,12 @@ const Settings = () => {
             <TabsTrigger value="mpesa" className="gap-2 px-3 py-2">
               <Smartphone className="h-4 w-4" /><span>M-Pesa</span>
             </TabsTrigger>
-            {isAdmin() && (
+            {isLandlord() && (
               <TabsTrigger value="users" className="gap-2 px-3 py-2">
                 <Users className="h-4 w-4" /><span>Users</span>
               </TabsTrigger>
             )}
-            {isAdmin() && (
+            {isLandlord() && (
               <TabsTrigger value="features" className="gap-2 px-3 py-2">
                 <ToggleRight className="h-4 w-4" /><span>Features</span>
               </TabsTrigger>
@@ -585,13 +585,13 @@ const Settings = () => {
           <MpesaSettingsTab />
         </TabsContent>
 
-        {isAdmin() && (
+        {isLandlord() && (
           <TabsContent value="users">
             <UserManagement />
           </TabsContent>
         )}
 
-        {isAdmin() && (
+        {isLandlord() && (
           <TabsContent value="features">
             <FeatureToggleManagement />
           </TabsContent>

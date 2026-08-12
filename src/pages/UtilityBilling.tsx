@@ -93,7 +93,7 @@ const UtilityBilling = ({ embedded = false }: { embedded?: boolean }) => {
   };
 
   return (
-    <DashboardLayout title="Utility Bills" subtitle="Water, electricity, and garbage usage billing">
+    <Shell>
       <div className="space-y-6">
         <div className="flex justify-end">
           <Button onClick={() => setOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> New Bill</Button>
@@ -197,7 +197,7 @@ const UtilityBilling = ({ embedded = false }: { embedded?: boolean }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+    </Shell>
   );
 };
 

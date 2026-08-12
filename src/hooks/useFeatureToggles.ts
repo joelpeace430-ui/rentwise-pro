@@ -14,7 +14,7 @@ export const FEATURE_LABELS: Record<FeatureKey, { label: string; description: st
 };
 
 export const ALL_FEATURES: FeatureKey[] = ["finance", "tax", "expenses", "reports", "maintenance"];
-export const ALL_ROLES: AppRole[] = ["admin", "landlord", "finance", "agent"];
+export const ALL_ROLES: AppRole[] = ["landlord", "finance", "agent"];
 
 export interface FeatureToggle {
   id: string;
@@ -25,7 +25,7 @@ export interface FeatureToggle {
 
 export const useFeatureToggles = () => {
   const { user } = useAuth();
-  const { roles, isAdmin } = useUserRoles();
+  const { roles } = useUserRoles();
   const [toggles, setToggles] = useState<FeatureToggle[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,10 +51,8 @@ export const useFeatureToggles = () => {
 
   /**
    * Returns true if ANY of the user's roles has the feature enabled.
-   * Admin always has every feature enabled.
    */
   const isFeatureEnabled = (feature: FeatureKey): boolean => {
-    if (isAdmin()) return true;
     if (roles.length === 0) return false;
     return toggles.some(
       (t) => t.feature_key === feature && t.enabled && roles.includes(t.role)

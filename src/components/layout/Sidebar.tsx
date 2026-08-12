@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: "Admin",
   landlord: "Landlord",
   finance: "Finance",
   agent: "Agent",
@@ -44,7 +43,6 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
   const {
     roles,
     loading,
-    isAdmin,
     isAgent,
     isFinance,
     isLandlord,
@@ -86,7 +84,7 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Dashboard", href: "/", icon: LayoutDashboard, show: true },
     { name: "Properties", href: "/properties", icon: Building2, show: canManageProperties() },
     { name: "Tenants", href: "/tenants", icon: Users, show: canManageTenants() },
-    { name: "Landlords", href: "/landlords", icon: Briefcase, show: isAdmin() },
+    { name: "Landlords", href: "/landlords", icon: Briefcase, show: isLandlord() },
     { name: "Invoices", href: "/invoices", icon: FileText, show: isFeatureEnabled("finance") },
     { name: "Payments", href: "/payments", icon: CreditCard, show: isFeatureEnabled("finance") },
     { name: "Commissions", href: "/commissions", icon: Coins, show: isFeatureEnabled("finance") && canManageProperties() },
@@ -98,14 +96,12 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
   ];
 
   // Agent (incl. agents who are also landlords) get the merged agent+landlord portal.
-  // Finance is its own separate portal. Admin keeps the full landlord/admin nav.
-  const allNavigation = isAdmin()
-    ? landlordNavigation
-    : isAgent()
-      ? agentNavigation
-      : isFinance()
-        ? financeNavigation
-        : landlordNavigation;
+  // Finance is its own separate portal. Landlords get the landlord nav.
+  const allNavigation = isAgent()
+    ? agentNavigation
+    : isFinance()
+      ? financeNavigation
+      : landlordNavigation;
 
   const navigation = allNavigation.filter((item) => item.show);
 

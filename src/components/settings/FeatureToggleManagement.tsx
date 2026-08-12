@@ -15,7 +15,6 @@ import { useUserRoles, AppRole } from "@/hooks/useUserRoles";
 import { useToast } from "@/hooks/use-toast";
 
 const ROLE_LABELS: Record<AppRole, string> = {
-  admin: "Admin",
   landlord: "Landlord",
   finance: "Finance",
   agent: "Agent",
@@ -24,17 +23,17 @@ const ROLE_LABELS: Record<AppRole, string> = {
 
 const FeatureToggleManagement = () => {
   const { toggles, loading, setToggle } = useFeatureToggles();
-  const { isAdmin } = useUserRoles();
+  const { isLandlord } = useUserRoles();
   const { toast } = useToast();
   const [pending, setPending] = useState<string | null>(null);
 
-  if (!isAdmin()) {
+  if (!isLandlord()) {
     return (
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
           <ToggleRight className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p className="text-lg font-medium">Admin Access Required</p>
-          <p className="text-sm">Only administrators can manage feature toggles.</p>
+          <p className="text-lg font-medium">Landlord Access Required</p>
+          <p className="text-sm">Only landlords can manage feature toggles.</p>
         </CardContent>
       </Card>
     );
@@ -66,7 +65,7 @@ const FeatureToggleManagement = () => {
           Feature Access Control
         </CardTitle>
         <CardDescription>
-          Enable or disable features per role. Admins always have access to all features.
+          Enable or disable features per role.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -98,8 +97,8 @@ const FeatureToggleManagement = () => {
                     </TableCell>
                     {ALL_ROLES.map((role) => {
                       const key = `${role}-${feature}`;
-                      const checked = role === "admin" ? true : isEnabled(role, feature);
-                      const disabled = role === "admin" || pending === key;
+                      const checked = isEnabled(role, feature);
+                      const disabled = pending === key;
                       return (
                         <TableCell key={role} className="text-center">
                           <div className="flex items-center justify-center">
@@ -121,8 +120,7 @@ const FeatureToggleManagement = () => {
               </TableBody>
             </Table>
             <p className="text-xs text-muted-foreground mt-4">
-              <strong>Note:</strong> Admins always have full access — their toggles are locked on.
-              Disabled features are hidden from the sidebar and routes are blocked.
+              <strong>Note:</strong>               Disabled features are hidden from the sidebar and routes are blocked.
             </p>
           </div>
         )}

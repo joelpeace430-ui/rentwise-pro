@@ -176,13 +176,13 @@ const UserManagement = () => {
     return u.email;
   };
 
-  if (!isAdmin()) {
+  if (!isLandlord()) {
     return (
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
           <ShieldCheck className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p className="text-lg font-medium">Admin Access Required</p>
-          <p className="text-sm">Only administrators can manage user roles.</p>
+          <p className="text-lg font-medium">Landlord Access Required</p>
+          <p className="text-sm">Only landlords can manage user roles.</p>
         </CardContent>
       </Card>
     );

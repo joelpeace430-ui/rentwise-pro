@@ -27,7 +27,6 @@ interface UserWithRoles {
 }
 
 const ROLE_CONFIG: { role: AppRole; label: string; description: string; icon: React.ElementType; colorClass: string }[] = [
-  { role: "admin", label: "Admin", description: "Full system access", icon: ShieldCheck, colorClass: "text-destructive" },
   { role: "landlord", label: "Landlord", description: "Property & tenant management", icon: Briefcase, colorClass: "text-primary" },
   { role: "finance", label: "Finance", description: "Payments, invoices, reports", icon: Calculator, colorClass: "text-amber-600" },
   { role: "agent", label: "Agent", description: "Tenant & property operations", icon: UserCog, colorClass: "text-blue-600" },
@@ -35,7 +34,6 @@ const ROLE_CONFIG: { role: AppRole; label: string; description: string; icon: Re
 ];
 
 const ROLE_COLORS: Partial<Record<AppRole, string>> = {
-  admin: "bg-destructive/10 text-destructive border-destructive/20",
   landlord: "bg-primary/10 text-primary border-primary/20",
   finance: "bg-amber-500/10 text-amber-600 border-amber-500/20",
   agent: "bg-blue-500/10 text-blue-600 border-blue-500/20",
@@ -44,7 +42,7 @@ const ROLE_COLORS: Partial<Record<AppRole, string>> = {
 
 const UserManagement = () => {
   const { user } = useAuth();
-  const { isAdmin } = useUserRoles();
+  const { isLandlord } = useUserRoles();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);

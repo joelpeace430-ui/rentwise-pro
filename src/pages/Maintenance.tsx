@@ -51,7 +51,16 @@ const statusColors: Record<string, string> = {
   cancelled: "bg-gray-100 text-gray-800",
 };
 
-const Maintenance = () => {
+const Maintenance = ({ embedded = false }: { embedded?: boolean }) => {
+  const Shell = ({ children }: { children: React.ReactNode }) =>
+    embedded ? (
+      <>{children}</>
+    ) : (
+      <DashboardLayout title="Maintenance" subtitle="Track and manage maintenance requests">
+        {children}
+      </DashboardLayout>
+    );
+
   const { user } = useAuth();
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,16 +113,16 @@ const Maintenance = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Maintenance" subtitle="Manage repair requests">
+      <Shell>
         <div className="flex items-center justify-center py-24">
           <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
         </div>
-      </DashboardLayout>
+      </Shell>
     );
   }
 
   return (
-    <DashboardLayout title="Maintenance" subtitle="Track and manage maintenance requests">
+    <Shell>
       <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid gap-4 md:grid-cols-3">
@@ -246,7 +255,7 @@ const Maintenance = () => {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </Shell>
   );
 };
 

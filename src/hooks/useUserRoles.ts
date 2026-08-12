@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
-export type AppRole = "admin" | "landlord" | "agent" | "caretaker" | "finance";
+export type AppRole = "landlord" | "agent" | "caretaker" | "finance";
 
 export interface UserRole {
   id: string;
@@ -52,7 +52,6 @@ export const useUserRoles = () => {
     return roles.includes(role);
   };
 
-  const isAdmin = (): boolean => hasRole("admin");
   const isLandlord = (): boolean => hasRole("landlord");
   const isAgent = (): boolean => hasRole("agent");
   const isCaretaker = (): boolean => hasRole("caretaker");
@@ -60,31 +59,31 @@ export const useUserRoles = () => {
 
   // Admin sees everything
   const canManageProperties = (): boolean => {
-    return isAdmin() || isLandlord();
+    return isLandlord();
   };
 
   const canManageTenants = (): boolean => {
-    return isAdmin() || isLandlord() || isAgent();
+    return isLandlord() || isAgent();
   };
 
   const canViewFinancials = (): boolean => {
-    return isAdmin() || isLandlord() || isFinance();
+    return isLandlord() || isFinance();
   };
 
   const canManageUsers = (): boolean => {
-    return isAdmin();
+    return isLandlord();
   };
 
   const canViewMaintenance = (): boolean => {
-    return isAdmin() || isLandlord() || isAgent() || isCaretaker();
+    return isLandlord() || isAgent() || isCaretaker();
   };
 
   const canViewReports = (): boolean => {
-    return isAdmin() || isLandlord() || isFinance();
+    return isLandlord() || isFinance();
   };
 
   const canViewTax = (): boolean => {
-    return isAdmin() || isLandlord() || isFinance();
+    return isLandlord() || isFinance();
   };
 
   const assignRole = async (userId: string, role: AppRole, assignedProperties: string[] = []) => {
@@ -146,7 +145,6 @@ export const useUserRoles = () => {
     roles,
     loading,
     hasRole,
-    isAdmin,
     isLandlord,
     isAgent,
     isCaretaker,

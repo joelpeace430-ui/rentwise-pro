@@ -97,8 +97,8 @@ const FeatureToggleManagement = () => {
                     </TableCell>
                     {ALL_ROLES.map((role) => {
                       const key = `${role}-${feature}`;
-                      const checked = role === "admin" ? true : isEnabled(role, feature);
-                      const disabled = role === "admin" || pending === key;
+                      const checked = isEnabled(role, feature);
+                      const disabled = pending === key;
                       return (
                         <TableCell key={role} className="text-center">
                           <div className="flex items-center justify-center">
@@ -120,8 +120,7 @@ const FeatureToggleManagement = () => {
               </TableBody>
             </Table>
             <p className="text-xs text-muted-foreground mt-4">
-              <strong>Note:</strong> Admins always have full access — their toggles are locked on.
-              Disabled features are hidden from the sidebar and routes are blocked.
+              <strong>Note:</strong>               Disabled features are hidden from the sidebar and routes are blocked.
             </p>
           </div>
         )}

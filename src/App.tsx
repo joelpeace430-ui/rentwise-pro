@@ -133,10 +133,7 @@ const App = () => (
                     path="/landlords"
                     element={<ProtectedRoute><Landlords /></ProtectedRoute>}
                   />
-                  <Route
-                    path="/utilities"
-                    element={<ProtectedRoute><UtilityBilling /></ProtectedRoute>}
-                  />
+                  <Route path="/utilities" element={<Navigate to="/expenses" replace />} />
                   <Route
                     path="/commissions"
                     element={<ProtectedRoute><Commissions /></ProtectedRoute>}
@@ -181,14 +178,7 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
-                  <Route
-                    path="/maintenance"
-                    element={
-                      <ProtectedRoute>
-                        <Maintenance />
-                      </ProtectedRoute>
-                    }
-                  />
+                  <Route path="/maintenance" element={<Navigate to="/expenses" replace />} />
                   <Route
                     path="/reports"
                     element={

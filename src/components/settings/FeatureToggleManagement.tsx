@@ -15,7 +15,6 @@ import { useUserRoles, AppRole } from "@/hooks/useUserRoles";
 import { useToast } from "@/hooks/use-toast";
 
 const ROLE_LABELS: Record<AppRole, string> = {
-  admin: "Admin",
   landlord: "Landlord",
   finance: "Finance",
   agent: "Agent",
@@ -24,17 +23,17 @@ const ROLE_LABELS: Record<AppRole, string> = {
 
 const FeatureToggleManagement = () => {
   const { toggles, loading, setToggle } = useFeatureToggles();
-  const { isAdmin } = useUserRoles();
+  const { isLandlord } = useUserRoles();
   const { toast } = useToast();
   const [pending, setPending] = useState<string | null>(null);
 
-  if (!isAdmin()) {
+  if (!isLandlord()) {
     return (
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
           <ToggleRight className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p className="text-lg font-medium">Admin Access Required</p>
-          <p className="text-sm">Only administrators can manage feature toggles.</p>
+          <p className="text-lg font-medium">Landlord Access Required</p>
+          <p className="text-sm">Only landlords can manage feature toggles.</p>
         </CardContent>
       </Card>
     );

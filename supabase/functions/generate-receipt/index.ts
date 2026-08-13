@@ -342,8 +342,59 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // ---------- SMS receipt (with debt summary) ----------
+    let smsSent = false;
+    const atKey = Deno.env.get("AFRICASTALKING_API_KEY");
+    const atUser = Deno.env.get("AFRICASTALKING_USERNAME");
+    const tenantPhone: string | undefined = payment.tenant?.phone;
+    if (atKey && atUser && tenantPhone) {
+      let phone = String(tenantPhone).replace(/[\s-]/g, "");
+      if (phone.startsWith("0")) phone = "+254" + phone.slice(1);
+      else if (!phone.startsWith("+")) phone = "+254" + phone;
+
+      const unpaidUtilTotal = utilities
+        .filter((u) => u.status !== "paid")
+        .reduce((s, u) => s + u.amount, 0);
+
+      const smsText =
+        `Payment received. Receipt ${receiptNumber}\n` +
+        `Amount paid: ${formatCurrency(Number(payment.amount))}\n` +
+        `${monthLabel} rent: ${formatCurrency(rentDue)}` +
+        (penalty > 0 ? `\nPenalty: ${formatCurrency(penalty)}` : "") +
+        (previousBalance > 0 ? `\nArrears: ${formatCurrency(previousBalance)}` : "") +
+        (unpaidUtilTotal > 0 ? `\nAmenities due: ${formatCurrency(unpaidUtilTotal)}` : "") +
+        `\nBALANCE: ${formatCurrency(remainingBalance)}` +
+        (remainingBalance === 0 ? "\nYou are fully paid. Thank you!" : "\nKindly clear the balance to avoid penalties.");
+
+      try {
+        const smsRes = await fetch("https://api.africastalking.com/version1/messaging", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            apiKey: atKey,
+          },
+          body: new URLSearchParams({ username: atUser, to: phone, message: smsText }),
+        });
+        const smsData = await smsRes.json();
+        smsSent = smsData?.SMSMessageData?.Recipients?.[0]?.statusCode === 101;
+
+        await supabase.from("sms_logs").insert({
+          user_id: payment.user_id,
+          tenant_id: tenantId,
+          message_type: "receipt_request",
+          message_content: smsText,
+          phone_number: phone,
+          status: smsSent ? "sent" : "failed",
+          error_message: smsSent ? null : JSON.stringify(smsData).slice(0, 500),
+        });
+      } catch (smsErr) {
+        console.error("Receipt SMS failed:", smsErr);
+      }
+    }
+
     return new Response(
-      JSON.stringify({ message: "Receipt generated successfully", receipt, analysis, emailSent }),
+      JSON.stringify({ message: "Receipt generated successfully", receipt, analysis, emailSent, smsSent }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
     );
   } catch (error: any) {

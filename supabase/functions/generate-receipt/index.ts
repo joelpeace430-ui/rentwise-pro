@@ -187,7 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
       .select(`
         *,
         tenant:tenants(
-          id, first_name, last_name, email, unit_number, monthly_rent,
+          id, first_name, last_name, email, phone, unit_number, monthly_rent,
           property:properties(name, address)
         )
       `)

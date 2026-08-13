@@ -13,7 +13,6 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Properties from "./pages/Properties";
 import Tenants from "./pages/Tenants";
-import Invoices from "./pages/Invoices";
 import Payments from "./pages/Payments";
 import Debts from "./pages/Debts";
 import Expenses from "./pages/Expenses";

@@ -55,7 +55,6 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
   // Finance keeps its own standalone portal
   const financeNavigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard, show: true },
-    { name: "Invoices", href: "/invoices", icon: FileText, show: true },
     { name: "Payments", href: "/payments", icon: CreditCard, show: true },
     { name: "Debts", href: "/debts", icon: AlertTriangle, show: true },
     { name: "Expenses", href: "/expenses", icon: Wallet, show: true },
@@ -71,7 +70,6 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Properties", href: "/agent/properties", icon: Building2, show: true },
     { name: "Tenants", href: "/agent/tenants", icon: Users, show: true },
     { name: "Payments", href: "/agent/payments", icon: CreditCard, show: true },
-    { name: "Invoices", href: "/invoices", icon: FileText, show: true },
     { name: "Debts", href: "/debts", icon: AlertTriangle, show: true },
     { name: "Expenses", href: "/expenses", icon: Wallet, show: true },
     { name: "Commissions", href: "/agent/commissions", icon: Coins, show: true },
@@ -83,7 +81,6 @@ export const SidebarContent = ({ onNavigate }: SidebarContentProps) => {
     { name: "Properties", href: "/properties", icon: Building2, show: canManageProperties() },
     { name: "Tenants", href: "/tenants", icon: Users, show: canManageTenants() },
     { name: "Landlords", href: "/landlords", icon: Briefcase, show: isLandlord() },
-    { name: "Invoices", href: "/invoices", icon: FileText, show: isFeatureEnabled("finance") },
     { name: "Payments", href: "/payments", icon: CreditCard, show: isFeatureEnabled("finance") },
     { name: "Commissions", href: "/commissions", icon: Coins, show: isFeatureEnabled("finance") && canManageProperties() },
     { name: "Debts", href: "/debts", icon: AlertTriangle, show: isFeatureEnabled("finance") },

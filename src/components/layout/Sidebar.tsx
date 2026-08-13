@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Building2,
   Users,
-  FileText,
   CreditCard,
   BarChart3,
   Receipt,
